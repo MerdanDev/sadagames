@@ -37,6 +37,9 @@ class BlockFitGame extends FlameGame with DragCallbacks {
   /// Swaps the player may hold at once.
   static const maxSwaps = 3;
 
+  /// Head start added per cell along a clearing line, so it sweeps.
+  static const _sweepPerCell = 0.022;
+
   /// Short sounds for placing, clearing and failing.
   final GameSounds sounds;
 
@@ -212,7 +215,36 @@ class BlockFitGame extends FlameGame with DragCallbacks {
     }
 
     // Collect first, clear after, so a row and a column crossing each other
-    // both count.
+    // both count. Cells are keyed by index so a crossing cell is only
+    // animated once.
+    final clearing = <int, ClearedCell>{};
+
+    void mark(int column, int row, double delay) {
+      final index = row * gridSize + column;
+      final colour = cellAt(column, row);
+      if (colour == null || clearing.containsKey(index)) return;
+      clearing[index] = ClearedCell(
+        colour: colour,
+        delay: delay,
+        side: _cellSize,
+        position: Vector2(
+          (column + 0.5) * _cellSize,
+          (row + 0.5) * _cellSize,
+        ),
+      );
+    }
+
+    for (final row in fullRows) {
+      for (var column = 0; column < gridSize; column++) {
+        mark(column, row, column * _sweepPerCell);
+      }
+    }
+    for (final column in fullColumns) {
+      for (var row = 0; row < gridSize; row++) {
+        mark(column, row, row * _sweepPerCell);
+      }
+    }
+
     for (final row in fullRows) {
       for (var column = 0; column < gridSize; column++) {
         _setCell(column, row, null);
@@ -223,6 +255,8 @@ class BlockFitGame extends FlameGame with DragCallbacks {
         _setCell(column, row, null);
       }
     }
+
+    unawaited(board.addAll(clearing.values));
 
     return fullRows.length + fullColumns.length;
   }

@@ -199,6 +199,94 @@ void main() {
     );
   });
 
+  group('clear animation', () {
+    testWithGame<BlockFitGame>(
+      'spawns a fading cell per cleared square',
+      buildGame,
+      (game) async {
+        _fillRowExcept(game, 3, 7);
+        game.tray[0] = _dot;
+
+        game.placeFromTray(0, 7, 3);
+        await game.ready();
+
+        expect(
+          game.board.children.query<ClearedCell>(),
+          hasLength(BlockFitGame.gridSize),
+        );
+      },
+    );
+
+    testWithGame<BlockFitGame>(
+      'animates a square shared by a row and a column only once',
+      buildGame,
+      (game) async {
+        _fillRowExcept(game, 0, 0);
+        for (var row = 1; row < BlockFitGame.gridSize; row++) {
+          game.cells[row * BlockFitGame.gridSize] = const Color(0xFF123456);
+        }
+        game.tray[0] = _dot;
+
+        game.placeFromTray(0, 0, 0);
+        await game.ready();
+
+        // Both lines share the corner, so it is one short of two full lines.
+        expect(
+          game.board.children.query<ClearedCell>(),
+          hasLength(BlockFitGame.gridSize * 2 - 1),
+        );
+      },
+    );
+
+    testWithGame<BlockFitGame>(
+      'empties the board immediately, without waiting for the animation',
+      buildGame,
+      (game) async {
+        _fillRowExcept(game, 3, 7);
+        game.tray[0] = _dot;
+
+        game.placeFromTray(0, 7, 3);
+
+        for (var column = 0; column < BlockFitGame.gridSize; column++) {
+          expect(game.cellAt(column, 3), isNull);
+        }
+      },
+    );
+
+    testWithGame<BlockFitGame>(
+      'lets a cleared square be filled again while it is still fading',
+      buildGame,
+      (game) async {
+        _fillRowExcept(game, 3, 7);
+        game.tray[0] = _dot;
+        game.placeFromTray(0, 7, 3);
+        await game.ready();
+        expect(game.board.children.query<ClearedCell>(), isNotEmpty);
+
+        game.tray[1] = _dot;
+
+        expect(game.placeFromTray(1, 0, 3), isTrue);
+      },
+    );
+
+    testWithGame<BlockFitGame>('tidies the cells away when done', buildGame, (
+      game,
+    ) async {
+      _fillRowExcept(game, 3, 7);
+      game.tray[0] = _dot;
+      game.placeFromTray(0, 7, 3);
+      await game.ready();
+
+      // Long enough for the last cell's stagger plus its pop and shrink.
+      for (var i = 0; i < 60; i++) {
+        game.update(0.02);
+      }
+      await game.ready();
+
+      expect(game.board.children.query<ClearedCell>(), isEmpty);
+    });
+  });
+
   group('running out of room', () {
     testWithGame<BlockFitGame>('reports when nothing fits', buildGame, (
       game,
