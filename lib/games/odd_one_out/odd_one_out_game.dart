@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/games/odd_one_out/components/components.dart';
-import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/records/records.dart';
 
 /// Spot the one tile whose colour is slightly off, before the timer runs out.
@@ -14,7 +13,7 @@ import 'package:sadagames/records/records.dart';
 /// colours move closer together and the clock gets shorter.
 class OddOneOutGame extends FlameGame {
   OddOneOutGame({
-    required this.effectPlayer,
+    required this.sounds,
     required this.records,
     Random? random,
   }) : _random = random ?? Random();
@@ -38,8 +37,8 @@ class OddOneOutGame extends FlameGame {
   static const _startSeconds = 6.0;
   static const _minSeconds = 2.5;
 
-  /// Player used for the short right and wrong sound effects.
-  final AudioPlayer effectPlayer;
+  /// Short sounds for right and wrong answers.
+  final GameSounds sounds;
 
   /// Store holding the player's furthest level between launches.
   final GameRecords records;
@@ -162,14 +161,14 @@ class OddOneOutGame extends FlameGame {
     if ((level - 1) % levelsPerExtraLife == 0 && lives < maxLives) {
       livesNotifier.value = lives + 1;
     }
-    unawaited(_playEffect(rate: min(1 + level * 0.02, 1.6)));
+    unawaited(sounds.blip(pitch: min(1 + level * 0.02, 1.6)));
     _restartTimer();
     unawaited(_buildBoard());
   }
 
   void _loseLife() {
     livesNotifier.value = lives - 1;
-    unawaited(_playEffect(rate: 0.6));
+    unawaited(sounds.thud());
 
     if (lives <= 0) {
       _endGame();
@@ -205,11 +204,6 @@ class OddOneOutGame extends FlameGame {
     overlays.add(gameOverOverlayId);
   }
 
-  Future<void> _playEffect({required double rate}) async {
-    await effectPlayer.setPlaybackRate(rate);
-    await effectPlayer.play(AssetSource(Assets.audio.effect));
-  }
-
   /// Starts a fresh run from level one.
   void restart() {
     levelNotifier.value = 1;
@@ -227,6 +221,7 @@ class OddOneOutGame extends FlameGame {
     livesNotifier.dispose();
     timeLeftNotifier.dispose();
     bestLevelNotifier.dispose();
+    sounds.dispose();
     super.onRemove();
   }
 }

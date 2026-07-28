@@ -5,6 +5,7 @@ import 'package:flame/game.dart' hide Route;
 import 'package:flame_audio/bgm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/game.dart';
 import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/l10n/l10n.dart';
@@ -71,10 +72,15 @@ class _GameViewState extends State<GameView> {
         widget.game ??
         Sadagames(
           l10n: context.l10n,
-          effectPlayer: context.read<AudioCubit>().effectPlayer,
+          sounds: GameSounds(context.read<AudioCubit>().effectPlayer),
           textStyle: textStyle,
           images: context.read<PreloadCubit>().images,
         );
+    // Keep the counter clear of the home indicator now the canvas runs edge
+    // to edge.
+    final game = _game;
+    if (game is Sadagames) game.safeArea = MediaQuery.paddingOf(context);
+
     return Stack(
       children: [
         Positioned.fill(child: GameWidget(game: _game!)),

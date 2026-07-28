@@ -14,18 +14,18 @@ import 'package:sadagames/game/entities/unicorn/behaviors/behaviors.dart';
 import 'package:sadagames/game/game.dart';
 import 'package:sadagames/l10n/l10n.dart';
 
+import '../../../../helpers/helpers.dart';
+
 class _FakeAssetSource extends Fake implements AssetSource {}
 
 class _MockImages extends Mock implements Images {}
 
 class _MockAppLocalizations extends Mock implements AppLocalizations {}
 
-class _MockAudioPlayer extends Mock implements AudioPlayer {}
-
 class _Sadagames extends Sadagames {
   _Sadagames({
     required super.l10n,
-    required super.effectPlayer,
+    required super.sounds,
     required super.textStyle,
     required super.images,
   });
@@ -39,13 +39,13 @@ void main() {
 
   group('TappingBehavior', () {
     late AppLocalizations l10n;
-    late AudioPlayer audioPlayer;
     late Images images;
+    late MockAudioPlayer audioPlayer;
 
     Sadagames createFlameGame() {
       return _Sadagames(
         l10n: l10n,
-        effectPlayer: audioPlayer,
+        sounds: createTestSounds(audioPlayer),
         textStyle: const TextStyle(),
         images: images,
       );
@@ -59,8 +59,7 @@ void main() {
       l10n = _MockAppLocalizations();
       when(() => l10n.counterText(any())).thenReturn('counterText');
 
-      audioPlayer = _MockAudioPlayer();
-      when(() => audioPlayer.play(any())).thenAnswer((_) async {});
+      audioPlayer = MockAudioPlayer();
 
       images = _MockImages();
       final image = await _fakeImage();
@@ -91,7 +90,10 @@ void main() {
         expect(unicorn.animationTicker.currentIndex, equals(1));
         expect(unicorn.isAnimationPlaying(), equals(true));
 
-        verify(() => audioPlayer.play(any())).called(1);
+        verify(audioPlayer.resume).called(1);
+
+        // Let the sound's stop timer fire so it does not outlive the test.
+        await tester.pump(const Duration(milliseconds: 300));
       },
     );
   });

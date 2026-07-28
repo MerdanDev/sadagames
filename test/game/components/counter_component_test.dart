@@ -1,7 +1,6 @@
 // Make test files more explicit rather than collapsing calls
 // ignore_for_file: cascade_invocations
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/cache.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame_test/flame_test.dart';
@@ -11,14 +10,14 @@ import 'package:mocktail/mocktail.dart';
 import 'package:sadagames/game/game.dart';
 import 'package:sadagames/l10n/l10n.dart';
 
-class _MockAppLocalizations extends Mock implements AppLocalizations {}
+import '../../helpers/helpers.dart';
 
-class _MockAudioPlayer extends Mock implements AudioPlayer {}
+class _MockAppLocalizations extends Mock implements AppLocalizations {}
 
 class _Sadagames extends Sadagames {
   _Sadagames({
     required super.l10n,
-    required super.effectPlayer,
+    required super.sounds,
     required super.textStyle,
     required super.images,
   });
@@ -42,7 +41,7 @@ void main() {
     Sadagames createFlameGame() {
       return _Sadagames(
         l10n: l10n,
-        effectPlayer: _MockAudioPlayer(),
+        sounds: createTestSounds(),
         textStyle: const TextStyle(),
         images: Images(),
       );

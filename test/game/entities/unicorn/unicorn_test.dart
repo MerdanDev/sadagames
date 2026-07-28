@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/cache.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame_test/flame_test.dart';
@@ -9,18 +8,18 @@ import 'package:sadagames/game/entities/unicorn/behaviors/behaviors.dart';
 import 'package:sadagames/game/game.dart';
 import 'package:sadagames/l10n/l10n.dart';
 
+import '../../../helpers/helpers.dart';
+
 class _FakeImage extends Fake implements Image {}
 
 class _MockAppLocalizations extends Mock implements AppLocalizations {}
-
-class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
 class _MockImages extends Mock implements Images {}
 
 class _Sadagames extends Sadagames {
   _Sadagames({
     required super.l10n,
-    required super.effectPlayer,
+    required super.sounds,
     required super.textStyle,
     required super.images,
   });
@@ -47,7 +46,7 @@ void main() {
     _Sadagames createFlameGame() {
       return _Sadagames(
         l10n: l10n,
-        effectPlayer: _MockAudioPlayer(),
+        sounds: createTestSounds(),
         textStyle: const TextStyle(),
         images: images,
       );

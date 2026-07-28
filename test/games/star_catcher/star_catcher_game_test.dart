@@ -11,8 +11,6 @@ import 'package:sadagames/records/records.dart';
 
 import '../../helpers/helpers.dart';
 
-class _MockAudioPlayer extends Mock implements AudioPlayer {}
-
 class _AlwaysHeartRandom implements Random {
   @override
   bool nextBool() => true;
@@ -24,18 +22,11 @@ class _AlwaysHeartRandom implements Random {
   int nextInt(int max) => 0;
 }
 
-_MockAudioPlayer _audioPlayer() {
-  final player = _MockAudioPlayer();
-  when(() => player.setPlaybackRate(any())).thenAnswer((_) async {});
-  when(() => player.play(any())).thenAnswer((_) async {});
-  return player;
-}
-
 /// Builds the game with a stub overlay, which the `GameWidget` would otherwise
 /// register through its `overlayBuilderMap`.
 StarCatcherGame _buildGameWith(GameRecords records, {Random? random}) {
   return StarCatcherGame(
-      effectPlayer: _audioPlayer(),
+      sounds: createTestSounds(),
       records: records,
       random: random,
     )

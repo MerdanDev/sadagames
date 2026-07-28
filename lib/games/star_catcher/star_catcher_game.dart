@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/games/star_catcher/components/components.dart';
-import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/records/records.dart';
 
 /// A small arcade game: drag the basket to catch the falling stars.
@@ -16,7 +15,7 @@ import 'package:sadagames/records/records.dart';
 /// hearts drop in once the player is warmed up and give a life back.
 class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
   StarCatcherGame({
-    required this.effectPlayer,
+    required this.sounds,
     required this.records,
     Random? random,
   }) : _random = random ?? Random();
@@ -41,8 +40,8 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
   static const _minStarDiameter = 18.0;
   static const _heartChance = 0.12;
 
-  /// Player used for the short catch and miss sound effects.
-  final AudioPlayer effectPlayer;
+  /// Short sounds for catches, hearts and misses.
+  final GameSounds sounds;
 
   /// Store holding the player's best score between launches.
   final GameRecords records;
@@ -147,24 +146,19 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
   void _onCaught(FallingCollectible collectible) {
     if (collectible is Heart) {
       livesNotifier.value = min(lives + 1, maxLives);
-      unawaited(_playEffect(rate: 0.8));
+      unawaited(sounds.fanfare());
       return;
     }
 
     scoreNotifier.value = score + 1;
     // Nudge the pitch up as the streak grows so catching keeps feeling better.
-    unawaited(_playEffect(rate: min(1 + score * 0.02, 1.6)));
+    unawaited(sounds.blip(pitch: min(1 + score * 0.02, 1.6)));
   }
 
   void _onMissed() {
     livesNotifier.value = lives - 1;
-    unawaited(_playEffect(rate: 0.6));
+    unawaited(sounds.thud());
     if (lives <= 0) _endGame();
-  }
-
-  Future<void> _playEffect({required double rate}) async {
-    await effectPlayer.setPlaybackRate(rate);
-    await effectPlayer.play(AssetSource(Assets.audio.effect));
   }
 
   void _endGame() {
@@ -220,6 +214,7 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
     scoreNotifier.dispose();
     livesNotifier.dispose();
     bestScoreNotifier.dispose();
+    sounds.dispose();
     super.onRemove();
   }
 }

@@ -6,6 +6,7 @@ import 'package:flame_audio/bgm.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/games/odd_one_out/odd_one_out.dart';
 import 'package:sadagames/games/widgets/widgets.dart';
@@ -56,7 +57,7 @@ class _OddOneOutViewState extends State<OddOneOutView> {
     _game =
         widget.game ??
         OddOneOutGame(
-          effectPlayer: context.read<AudioCubit>().effectPlayer,
+          sounds: GameSounds(context.read<AudioCubit>().effectPlayer),
           records: context.read<GameRecords>(),
         );
     bgm = context.read<AudioCubit>().bgm;

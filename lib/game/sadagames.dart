@@ -1,15 +1,15 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/cache.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
-import 'package:flutter/painting.dart';
+import 'package:flutter/widgets.dart';
+import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/game.dart';
 import 'package:sadagames/l10n/l10n.dart';
 
 class Sadagames extends FlameGame {
   Sadagames({
     required this.l10n,
-    required this.effectPlayer,
+    required this.sounds,
     required this.textStyle,
     required Images images,
   }) {
@@ -18,13 +18,30 @@ class Sadagames extends FlameGame {
 
   final AppLocalizations l10n;
 
-  final AudioPlayer effectPlayer;
+  /// Short sound played when the unicorn is tapped.
+  final GameSounds sounds;
 
   final TextStyle textStyle;
 
   int counter = 0;
 
   CounterComponent? counterComponent;
+
+  EdgeInsets _safeArea = EdgeInsets.zero;
+
+  /// Insets of the system bars, in logical pixels.
+  ///
+  /// The canvas is deliberately edge to edge, so the counter has to be pushed
+  /// clear of the home indicator by hand.
+  EdgeInsets get safeArea => _safeArea;
+
+  set safeArea(EdgeInsets value) {
+    if (value == _safeArea) return;
+    _safeArea = value;
+    // The view hands this over before the first layout, when `size` would
+    // still throw; `onLoad` positions the counter with it soon after.
+    if (hasLayout) _positionCounterComponent(size);
+  }
 
   @override
   Color backgroundColor() => const Color(0xFF2A48DF);
@@ -56,6 +73,9 @@ class Sadagames extends FlameGame {
   }
 
   void _positionCounterComponent(Vector2 size) {
-    counterComponent?.position = Vector2(10, size.y - 10);
+    counterComponent?.position = Vector2(
+      10 + _safeArea.left,
+      size.y - 10 - _safeArea.bottom,
+    );
   }
 }

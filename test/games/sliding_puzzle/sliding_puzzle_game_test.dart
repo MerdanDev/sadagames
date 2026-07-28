@@ -8,19 +8,10 @@ import 'package:sadagames/records/records.dart';
 
 import '../../helpers/helpers.dart';
 
-class _MockAudioPlayer extends Mock implements AudioPlayer {}
-
-_MockAudioPlayer _audioPlayer() {
-  final player = _MockAudioPlayer();
-  when(() => player.setPlaybackRate(any())).thenAnswer((_) async {});
-  when(() => player.play(any())).thenAnswer((_) async {});
-  return player;
-}
-
 /// Builds the game with a stub overlay, which the `GameWidget` would otherwise
 /// register through its `overlayBuilderMap`.
 SlidingPuzzleGame _buildGameWith(GameRecords records) {
-  return SlidingPuzzleGame(effectPlayer: _audioPlayer(), records: records)
+  return SlidingPuzzleGame(sounds: createTestSounds(), records: records)
     ..overlays.addEntry(
       SlidingPuzzleGame.solvedOverlayId,
       (_, _) => const SizedBox.shrink(),

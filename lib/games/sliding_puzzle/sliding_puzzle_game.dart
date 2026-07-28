@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/games/sliding_puzzle/components/components.dart';
-import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/records/records.dart';
 
 /// A classic sliding puzzle: put the tiles back in order in as few moves as
@@ -16,7 +15,7 @@ import 'package:sadagames/records/records.dart';
 /// which guarantees every shuffle can actually be solved.
 class SlidingPuzzleGame extends FlameGame {
   SlidingPuzzleGame({
-    required this.effectPlayer,
+    required this.sounds,
     required this.records,
     Random? random,
   }) : _random = random ?? Random();
@@ -37,8 +36,8 @@ class SlidingPuzzleGame extends FlameGame {
   static const _shuffleMoves = 80;
   static const _slideDuration = 0.14;
 
-  /// Player used for the short slide and win sound effects.
-  final AudioPlayer effectPlayer;
+  /// Short sounds for slides and for solving the board.
+  final GameSounds sounds;
 
   /// Store holding the player's fewest solved moves between launches.
   final GameRecords records;
@@ -166,7 +165,7 @@ class SlidingPuzzleGame extends FlameGame {
     if (_checkSolved()) {
       _onSolved();
     } else {
-      unawaited(_playEffect(rate: 1.2));
+      unawaited(sounds.blip(pitch: 1.2));
     }
     return true;
   }
@@ -187,7 +186,7 @@ class SlidingPuzzleGame extends FlameGame {
   void _onSolved() {
     isSolved = true;
     _isRunning = false;
-    unawaited(_playEffect(rate: 0.9));
+    unawaited(sounds.fanfare());
     // Decide and show straight away; the write itself can settle in the
     // background rather than holding up the overlay.
     isNewRecord = records.beatsRecord(
@@ -201,11 +200,6 @@ class SlidingPuzzleGame extends FlameGame {
       records.submit(recordGameId, recordMetric, moves, goal: RecordGoal.lower),
     );
     overlays.add(solvedOverlayId);
-  }
-
-  Future<void> _playEffect({required double rate}) async {
-    await effectPlayer.setPlaybackRate(rate);
-    await effectPlayer.play(AssetSource(Assets.audio.effect));
   }
 
   /// Shuffles the board by replaying random legal moves, so the result is
@@ -242,6 +236,7 @@ class SlidingPuzzleGame extends FlameGame {
     movesNotifier.dispose();
     secondsNotifier.dispose();
     bestMovesNotifier.dispose();
+    sounds.dispose();
     super.onRemove();
   }
 }

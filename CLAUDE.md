@@ -57,10 +57,15 @@ lets the write settle in the background — never block the end-of-run panel on 
   `.fvmrc` pins stable; other repos in `~/development` intentionally stay on the system SDK.
 - `overlays.add` asserts the overlay builder is registered, which only `GameWidget` does at
   runtime. Tests must call `overlays.addEntry(...)` when building the game.
-- Only two audio assets exist (`background.mp3`, `effect.mp3`). Vary `setPlaybackRate` before
-  playing to make one clip cover several events rather than adding files.
+- Only two audio assets exist, and `effect.mp3` runs for **three seconds** — far longer than any
+  game event. Always play sounds through `GameSounds` (`lib/audio/`), which trims the clip to a
+  blip and pitches it. Two traps it exists to avoid: playing the raw clip drones over itself,
+  and `setPlaybackRate` is silently dropped unless it is called *after* playback starts.
 - Game pages deliberately have **no** `SafeArea` around `GameWidget` — the canvas is
   edge-to-edge and only the HUD row is inset. Don't "fix" this by wrapping the whole page.
+  Content drawn *inside* Flame gets no such inset, so anything pinned to an edge has to be
+  offset by hand: `Sadagames.safeArea` takes the insets from the view. Guard any such setter
+  with `hasLayout` — the view passes them down before the game has a `size`.
 
 ## Decisions
 

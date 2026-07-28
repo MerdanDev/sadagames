@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/games/colour_sequence/components/components.dart';
-import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/records/records.dart';
 
 /// What the game is waiting for right now.
@@ -26,7 +25,7 @@ enum SequenceStatus {
 /// sequence gets both longer and quicker.
 class ColourSequenceGame extends FlameGame {
   ColourSequenceGame({
-    required this.effectPlayer,
+    required this.sounds,
     required this.records,
     Random? random,
   }) : _random = random ?? Random();
@@ -60,8 +59,8 @@ class ColourSequenceGame extends FlameGame {
   static const _leadInSeconds = 0.45;
   static const _pressSeconds = 0.18;
 
-  /// Player used for the pad notes.
-  final AudioPlayer effectPlayer;
+  /// Short sounds giving each pad its own note.
+  final GameSounds sounds;
 
   /// Store holding the player's longest sequence between launches.
   final GameRecords records;
@@ -181,7 +180,7 @@ class ColourSequenceGame extends FlameGame {
 
     final padIndex = sequence[_playbackIndex];
     _pads[padIndex].litSeconds = flashSeconds;
-    unawaited(_playEffect(rate: padRates[padIndex]));
+    unawaited(sounds.blip(pitch: padRates[padIndex]));
     _playbackIndex++;
     _timer = flashSeconds + _gapSeconds;
   }
@@ -191,7 +190,7 @@ class ColourSequenceGame extends FlameGame {
     if (status != SequenceStatus.awaitingInput) return;
 
     _pads[index].litSeconds = _pressSeconds;
-    unawaited(_playEffect(rate: padRates[index]));
+    unawaited(sounds.blip(pitch: padRates[index]));
 
     if (sequence[_inputIndex] != index) {
       _onMistake();
@@ -207,7 +206,7 @@ class ColourSequenceGame extends FlameGame {
 
   void _onMistake() {
     livesNotifier.value = lives - 1;
-    unawaited(_playEffect(rate: 0.45));
+    unawaited(sounds.thud());
 
     if (lives <= 0) {
       _endGame();
@@ -239,11 +238,6 @@ class ColourSequenceGame extends FlameGame {
     overlays.add(gameOverOverlayId);
   }
 
-  Future<void> _playEffect({required double rate}) async {
-    await effectPlayer.setPlaybackRate(rate);
-    await effectPlayer.play(AssetSource(Assets.audio.effect));
-  }
-
   /// Starts a fresh run from a single pad.
   void restart() {
     sequence.clear();
@@ -260,6 +254,7 @@ class ColourSequenceGame extends FlameGame {
     livesNotifier.dispose();
     statusNotifier.dispose();
     bestRoundsNotifier.dispose();
+    sounds.dispose();
     super.onRemove();
   }
 }
