@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sadagames/game/game.dart';
+import 'package:sadagames/games/odd_one_out/odd_one_out.dart';
 import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
 import 'package:sadagames/games/star_catcher/star_catcher.dart';
 
@@ -65,6 +66,16 @@ abstract final class GameCatalog {
       routeBuilder: SlidingPuzzlePage.route,
       recordMetric: SlidingPuzzleGame.recordMetric,
       recordUnit: 'move',
+    ),
+    GameCatalogEntry(
+      id: 'odd_one_out',
+      name: 'Odd One Out',
+      description: 'Spot the tile with the odd colour before time runs out.',
+      icon: Icons.palette_rounded,
+      color: Color(0xFF06D6A0),
+      routeBuilder: OddOneOutPage.route,
+      recordMetric: OddOneOutGame.recordMetric,
+      recordUnit: 'level',
     ),
     GameCatalogEntry(
       id: 'unicorn_tap',

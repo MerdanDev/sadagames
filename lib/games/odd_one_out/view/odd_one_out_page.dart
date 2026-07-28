@@ -7,17 +7,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
-import 'package:sadagames/games/star_catcher/star_catcher.dart';
+import 'package:sadagames/games/odd_one_out/odd_one_out.dart';
 import 'package:sadagames/games/widgets/widgets.dart';
 import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/loading/cubit/cubit.dart';
 import 'package:sadagames/records/records.dart';
 
-class StarCatcherPage extends StatelessWidget {
-  const StarCatcherPage({super.key});
+class OddOneOutPage extends StatelessWidget {
+  const OddOneOutPage({super.key});
 
   static Route<void> route() {
-    return MaterialPageRoute<void>(builder: (_) => const StarCatcherPage());
+    return MaterialPageRoute<void>(builder: (_) => const OddOneOutPage());
   }
 
   @override
@@ -30,24 +30,24 @@ class StarCatcherPage extends StatelessWidget {
           backgroundMusic: Bgm(audioCache: audioCache),
         );
       },
-      // No SafeArea here on purpose: the game fills the screen edge to edge and
-      // only the HUD is inset.
-      child: const Scaffold(body: StarCatcherView()),
+      // No SafeArea here on purpose: the board fills the screen edge to edge
+      // and only the HUD is inset.
+      child: const Scaffold(body: OddOneOutView()),
     );
   }
 }
 
-class StarCatcherView extends StatefulWidget {
-  const StarCatcherView({super.key, this.game});
+class OddOneOutView extends StatefulWidget {
+  const OddOneOutView({super.key, this.game});
 
-  final StarCatcherGame? game;
+  final OddOneOutGame? game;
 
   @override
-  State<StarCatcherView> createState() => _StarCatcherViewState();
+  State<OddOneOutView> createState() => _OddOneOutViewState();
 }
 
-class _StarCatcherViewState extends State<StarCatcherView> {
-  late final StarCatcherGame _game;
+class _OddOneOutViewState extends State<OddOneOutView> {
+  late final OddOneOutGame _game;
   late final Bgm bgm;
 
   @override
@@ -55,7 +55,7 @@ class _StarCatcherViewState extends State<StarCatcherView> {
     super.initState();
     _game =
         widget.game ??
-        StarCatcherGame(
+        OddOneOutGame(
           effectPlayer: context.read<AudioCubit>().effectPlayer,
           records: context.read<GameRecords>(),
         );
@@ -79,7 +79,7 @@ class _StarCatcherViewState extends State<StarCatcherView> {
         GameWidget(
           game: _game,
           overlayBuilderMap: {
-            StarCatcherGame.gameOverOverlayId: (_, StarCatcherGame game) =>
+            OddOneOutGame.gameOverOverlayId: (_, OddOneOutGame game) =>
                 _GameOverOverlay(game: game),
           },
         ),
@@ -90,35 +90,41 @@ class _StarCatcherViewState extends State<StarCatcherView> {
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
+              child: Column(
                 children: [
-                  _ScoreLabel(
-                    score: _game.scoreNotifier,
-                    best: _game.bestScoreNotifier,
+                  Row(
+                    children: [
+                      _LevelLabel(
+                        level: _game.levelNotifier,
+                        best: _game.bestLevelNotifier,
+                      ),
+                      const Spacer(),
+                      LivesIndicator(
+                        lives: _game.livesNotifier,
+                        maxLives: OddOneOutGame.maxLives,
+                      ),
+                      BlocBuilder<AudioCubit, AudioState>(
+                        builder: (context, state) {
+                          return IconButton(
+                            icon: Icon(
+                              state.volume == 0
+                                  ? Icons.volume_off
+                                  : Icons.volume_up,
+                              color: Colors.white,
+                            ),
+                            onPressed: () =>
+                                context.read<AudioCubit>().toggleVolume(),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
                   ),
-                  const Spacer(),
-                  LivesIndicator(
-                    lives: _game.livesNotifier,
-                    maxLives: StarCatcherGame.maxLives,
-                  ),
-                  BlocBuilder<AudioCubit, AudioState>(
-                    builder: (context, state) {
-                      return IconButton(
-                        icon: Icon(
-                          state.volume == 0
-                              ? Icons.volume_off
-                              : Icons.volume_up,
-                          color: Colors.white,
-                        ),
-                        onPressed: () =>
-                            context.read<AudioCubit>().toggleVolume(),
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+                  const SizedBox(height: 4),
+                  _TimeBar(timeLeft: _game.timeLeftNotifier),
                 ],
               ),
             ),
@@ -129,10 +135,10 @@ class _StarCatcherViewState extends State<StarCatcherView> {
   }
 }
 
-class _ScoreLabel extends StatelessWidget {
-  const _ScoreLabel({required this.score, required this.best});
+class _LevelLabel extends StatelessWidget {
+  const _LevelLabel({required this.level, required this.best});
 
-  final ValueListenable<int> score;
+  final ValueListenable<int> level;
   final ValueListenable<int?> best;
 
   @override
@@ -140,14 +146,14 @@ class _ScoreLabel extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return ValueListenableBuilder<int>(
-      valueListenable: score,
+      valueListenable: level,
       builder: (context, value, _) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Score: $value',
+              'Level $value',
               style: textTheme.titleMedium?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -170,10 +176,37 @@ class _ScoreLabel extends StatelessWidget {
   }
 }
 
+/// Shrinking bar showing how long is left to find the odd tile.
+class _TimeBar extends StatelessWidget {
+  const _TimeBar({required this.timeLeft});
+
+  final ValueListenable<double> timeLeft;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<double>(
+      valueListenable: timeLeft,
+      builder: (context, value, _) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: value,
+            minHeight: 6,
+            backgroundColor: Colors.white24,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              value < 0.3 ? const Color(0xFFE63946) : const Color(0xFFFFD166),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _GameOverOverlay extends StatelessWidget {
   const _GameOverOverlay({required this.game});
 
-  final StarCatcherGame game;
+  final OddOneOutGame game;
 
   @override
   Widget build(BuildContext context) {
@@ -191,7 +224,7 @@ class _GameOverOverlay extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'You caught ${formatRecord(game.score, 'star')}',
+              'You reached level ${game.level}',
               style: textTheme.bodyLarge?.copyWith(color: Colors.white70),
             ),
             const SizedBox(height: 8),
@@ -199,8 +232,7 @@ class _GameOverOverlay extends StatelessWidget {
               isNewRecord: game.isNewRecord,
               text: game.isNewRecord
                   ? 'New record!'
-                  : 'Best: '
-                        '${formatRecord(game.bestScore ?? game.score, 'star')}',
+                  : 'Best: level ${game.bestLevel ?? game.level}',
             ),
             const SizedBox(height: 24),
             ElevatedButton(
