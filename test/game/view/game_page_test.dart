@@ -8,7 +8,6 @@ import 'dart:ui' as ui;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flame/cache.dart';
-import 'package:flame_audio/bgm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,8 +27,6 @@ class _MockAudioCubit extends MockCubit<AudioState> implements AudioCubit {}
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
 class _MockImages extends Mock implements Images {}
-
-class _MockBgm extends Mock implements Bgm {}
 
 class _MockPreloadCubit extends MockCubit<PreloadState>
     implements PreloadCubit {}
@@ -111,10 +108,6 @@ void main() {
 
       final effectPlayer = _MockAudioPlayer();
       when(() => audioCubit.effectPlayer).thenReturn(effectPlayer);
-      final bgm = _MockBgm();
-      when(() => audioCubit.bgm).thenReturn(bgm);
-      when(() => bgm.play(any())).thenAnswer((_) async {});
-      when(bgm.pause).thenAnswer((_) async {});
     });
 
     testWidgets('toggles mute button correctly', (tester) async {

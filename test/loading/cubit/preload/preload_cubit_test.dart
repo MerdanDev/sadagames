@@ -30,10 +30,9 @@ void main() {
 
           audio = _MockAudioCache();
           when(
-            () => audio.loadAll([Assets.audio.background, Assets.audio.effect]),
+            () => audio.loadAll([Assets.audio.effect]),
           ).thenAnswer(
             (invocation) async => [
-              Uri.parse(Assets.audio.background),
               Uri.parse(Assets.audio.effect),
             ],
           );
@@ -63,7 +62,7 @@ void main() {
         ],
         verify: (bloc) {
           verify(
-            () => audio.loadAll([Assets.audio.background, Assets.audio.effect]),
+            () => audio.loadAll([Assets.audio.effect]),
           ).called(1);
           verify(
             () => images.loadAll([Assets.images.unicornAnimation.path]),

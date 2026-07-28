@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/game.dart' hide Route;
-import 'package:flame_audio/bgm.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,7 +7,6 @@ import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/games/star_catcher/star_catcher.dart';
 import 'package:sadagames/games/widgets/widgets.dart';
-import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/loading/cubit/cubit.dart';
 import 'package:sadagames/records/records.dart';
 import 'package:sadagames/settings/settings.dart';
@@ -29,7 +25,6 @@ class StarCatcherPage extends StatelessWidget {
         final audioCache = context.read<PreloadCubit>().audio;
         return AudioCubit(
           audioPlayer: AudioPlayer()..audioCache = audioCache,
-          backgroundMusic: Bgm(audioCache: audioCache),
           settings: context.read<GameSettings>(),
         );
       },
@@ -51,7 +46,6 @@ class StarCatcherView extends StatefulWidget {
 
 class _StarCatcherViewState extends State<StarCatcherView> {
   late final StarCatcherGame _game;
-  late final Bgm bgm;
 
   @override
   void initState() {
@@ -62,15 +56,6 @@ class _StarCatcherViewState extends State<StarCatcherView> {
           sounds: GameSounds(context.read<AudioCubit>().effectPlayer),
           records: context.read<GameRecords>(),
         );
-    final audio = context.read<AudioCubit>();
-    bgm = audio.bgm;
-    unawaited(bgm.play(Assets.audio.background, volume: audio.state.volume));
-  }
-
-  @override
-  void dispose() {
-    unawaited(bgm.pause());
-    super.dispose();
   }
 
   @override

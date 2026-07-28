@@ -1,6 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bloc_test/bloc_test.dart';
-import 'package:flame_audio/bgm.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -12,27 +11,17 @@ class _MockAudioCache extends Mock implements AudioCache {}
 
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
-class _MockBgm extends Mock implements Bgm {}
-
 void main() {
   group('AudioCubit', () {
     TestWidgetsFlutterBinding.ensureInitialized();
 
     late AudioCache audioCache;
     late AudioPlayer effectPlayer;
-    late Bgm bgm;
-    late AudioPlayer bgmPlayer;
 
     setUp(() {
       audioCache = _MockAudioCache();
       effectPlayer = _MockAudioPlayer();
-      bgm = _MockBgm();
-      bgmPlayer = _MockAudioPlayer();
-      when(() => bgm.audioPlayer).thenReturn(bgmPlayer);
       when(() => effectPlayer.audioCache).thenReturn(audioCache);
-
-      when(bgm.dispose).thenAnswer((_) async {});
-      when(bgmPlayer.dispose).thenAnswer((_) async {});
       when(effectPlayer.dispose).thenAnswer((_) async {});
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -44,12 +33,10 @@ void main() {
 
     test('can be instantiated', () async {
       when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
-      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
 
       expect(
         AudioCubit(
           audioPlayer: effectPlayer,
-          backgroundMusic: bgm,
           settings: await createTestSettings(),
         ),
         isA<AudioCubit>(),
@@ -58,11 +45,9 @@ void main() {
 
     test('starts unmuted when nothing was saved', () async {
       when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
-      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
 
       final cubit = AudioCubit(
         audioPlayer: effectPlayer,
-        backgroundMusic: bgm,
         settings: await createTestSettings(),
       );
 
@@ -71,11 +56,9 @@ void main() {
 
     test('starts muted when the player muted it last time', () async {
       when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
-      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
 
       final cubit = AudioCubit(
         audioPlayer: effectPlayer,
-        backgroundMusic: bgm,
         settings: await createTestSettings(isMuted: true),
       );
 
@@ -84,27 +67,22 @@ void main() {
 
     test('silences the players as soon as it is built while muted', () async {
       when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
-      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
 
       AudioCubit(
         audioPlayer: effectPlayer,
-        backgroundMusic: bgm,
         settings: await createTestSettings(isMuted: true),
       );
       await Future<void>.delayed(Duration.zero);
 
       verify(() => effectPlayer.setVolume(0)).called(1);
-      verify(() => bgmPlayer.setVolume(0)).called(1);
     });
 
     test('remembers a mute for the next time', () async {
       when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
-      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
       final settings = await createTestSettings();
 
       final cubit = AudioCubit.test(
         effectPlayer: effectPlayer,
-        bgm: bgm,
         settings: settings,
       );
       await cubit.toggleVolume();
@@ -114,12 +92,10 @@ void main() {
 
     test('remembers unmuting too', () async {
       when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
-      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
       final settings = await createTestSettings(isMuted: true);
 
       final cubit = AudioCubit.test(
         effectPlayer: effectPlayer,
-        bgm: bgm,
         settings: settings,
         volume: 0,
       );
@@ -132,14 +108,12 @@ void main() {
       'toggleVolume mutes the volume when the volume is not 0',
       setUp: () {
         when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
-        when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
       },
-      build: () => AudioCubit.test(effectPlayer: effectPlayer, bgm: bgm),
+      build: () => AudioCubit.test(effectPlayer: effectPlayer),
       act: (cubit) => cubit.toggleVolume(),
       expect: () => [const AudioState(volume: 0)],
       verify: (_) {
         verify(() => effectPlayer.setVolume(any(that: equals(0)))).called(1);
-        verify(() => bgmPlayer.setVolume(any(that: equals(0)))).called(1);
       },
     );
 
@@ -147,16 +121,14 @@ void main() {
       'toggleVolume unmutes the volume when the volume is 0',
       setUp: () {
         when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
-        when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
       },
       build: () {
-        return AudioCubit.test(effectPlayer: effectPlayer, bgm: bgm, volume: 0);
+        return AudioCubit.test(effectPlayer: effectPlayer, volume: 0);
       },
       act: (cubit) => cubit.toggleVolume(),
       expect: () => [const AudioState()],
       verify: (_) {
         verify(() => effectPlayer.setVolume(any(that: equals(1)))).called(1);
-        verify(() => bgmPlayer.setVolume(any(that: equals(1)))).called(1);
       },
     );
   });

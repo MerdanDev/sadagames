@@ -1,13 +1,9 @@
-import 'dart:async';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/game.dart' hide Route;
-import 'package:flame_audio/bgm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/game.dart';
-import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/l10n/l10n.dart';
 import 'package:sadagames/loading/cubit/cubit.dart';
 import 'package:sadagames/settings/settings.dart';
@@ -26,7 +22,6 @@ class GamePage extends StatelessWidget {
         final audioCache = context.read<PreloadCubit>().audio;
         return AudioCubit(
           audioPlayer: AudioPlayer()..audioCache = audioCache,
-          backgroundMusic: Bgm(audioCache: audioCache),
           settings: context.read<GameSettings>(),
         );
       },
@@ -49,20 +44,9 @@ class GameView extends StatefulWidget {
 class _GameViewState extends State<GameView> {
   FlameGame? _game;
 
-  late final Bgm bgm;
-
   @override
   void initState() {
     super.initState();
-    final audio = context.read<AudioCubit>();
-    bgm = audio.bgm;
-    unawaited(bgm.play(Assets.audio.background, volume: audio.state.volume));
-  }
-
-  @override
-  void dispose() {
-    unawaited(bgm.pause());
-    super.dispose();
   }
 
   @override
