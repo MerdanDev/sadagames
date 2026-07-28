@@ -74,6 +74,8 @@ lets the write settle in the background — never block the end-of-run panel on 
 
 - `.claude/docs/game-engagement.md` — required checklist and patterns for building a new game.
   Read it before writing any new game.
+- `.claude/docs/game-backlog.md` — planned games in build order, plus cross-cutting work. Read
+  it when picking what to build next; tick entries off as they ship.
 
 ---
 
