@@ -8,8 +8,6 @@ import 'package:sadagames/records/records.dart';
 
 import '../../helpers/helpers.dart';
 
-/// Builds the game with a stub overlay, which the `GameWidget` would otherwise
-/// register through its `overlayBuilderMap`.
 /// Spawns a two in the lowest empty slot every time, so a board can be driven
 /// into a genuine dead end.
 class _FixedRandom implements Random {
@@ -23,6 +21,8 @@ class _FixedRandom implements Random {
   int nextInt(int max) => 0;
 }
 
+/// Builds the game with a stub overlay, which the `GameWidget` would otherwise
+/// register through its `overlayBuilderMap`.
 MergeTilesGame _buildGameWith(GameRecords records, {Random? random}) {
   return MergeTilesGame(
       sounds: createTestSounds(),
@@ -79,6 +79,20 @@ void main() {
       game,
     ) async {
       expect(game.undosLeft, equals(MergeTilesGame.startingUndos));
+    });
+
+    testWithGame<MergeTilesGame>('draws the empty board', buildGame, (
+      game,
+    ) async {
+      expect(game.children.query<BoardGrid>(), hasLength(1));
+    });
+
+    testWithGame<MergeTilesGame>('keeps the board under the tiles', buildGame, (
+      game,
+    ) async {
+      final tile = game.board.firstWhere((tile) => tile != null)!;
+
+      expect(game.grid.priority, lessThan(tile.priority));
     });
   });
 

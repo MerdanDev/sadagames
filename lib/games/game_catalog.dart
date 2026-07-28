@@ -14,12 +14,16 @@ class GameCatalogEntry {
     required this.id,
     required this.name,
     required this.description,
-    required this.icon,
     required this.color,
     required this.routeBuilder,
+    this.icon,
+    this.iconLabel,
     this.recordMetric,
     this.recordUnit = '',
-  });
+  }) : assert(
+         icon != null || iconLabel != null,
+         'An entry needs either an icon or a label to show on the menu',
+       );
 
   /// Stable identifier, also used as the widget key on the menu page.
   final String id;
@@ -28,7 +32,11 @@ class GameCatalogEntry {
 
   final String description;
 
-  final IconData icon;
+  /// Icon shown on the menu. Leave null to show [iconLabel] instead.
+  final IconData? icon;
+
+  /// Short text shown in place of an icon, for a game whose name is a number.
+  final String? iconLabel;
 
   /// Accent color used for the entry's leading icon.
   final Color color;
@@ -65,7 +73,7 @@ abstract final class GameCatalog {
       id: 'merge_tiles',
       name: 'Merge Tiles',
       description: 'Swipe to slide the tiles and merge matching numbers.',
-      icon: Icons.grid_4x4_rounded,
+      iconLabel: '2048',
       color: Color(0xFFF3722C),
       routeBuilder: MergeTilesPage.route,
       recordMetric: MergeTilesGame.recordMetric,

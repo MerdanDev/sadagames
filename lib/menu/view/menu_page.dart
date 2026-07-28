@@ -67,7 +67,7 @@ class GameCatalogTile extends StatelessWidget {
         ),
         leading: CircleAvatar(
           backgroundColor: entry.color,
-          child: Icon(entry.icon, color: Colors.white),
+          child: _TileBadge(entry: entry),
         ),
         title: Text(
           entry.name,
@@ -103,6 +103,33 @@ class GameCatalogTile extends StatelessWidget {
         ),
         trailing: const Icon(Icons.chevron_right_rounded),
         onTap: () => Navigator.of(context).push<void>(entry.routeBuilder()),
+      ),
+    );
+  }
+}
+
+/// Whatever the entry uses to identify itself: an icon, or short text for a
+/// game whose name is a number.
+class _TileBadge extends StatelessWidget {
+  const _TileBadge({required this.entry});
+
+  final GameCatalogEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = entry.icon;
+    if (icon != null) return Icon(icon, color: Colors.white);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: FittedBox(
+        child: Text(
+          entry.iconLabel!,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }

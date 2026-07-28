@@ -93,4 +93,22 @@ void main() {
       expect(find.text('Best: 8 stars'), findsOneWidget);
     });
   });
+
+  group('tile badges', () {
+    testWidgets('show the icon when the entry has one', (tester) async {
+      final entry = GameCatalog.entries.firstWhere((e) => e.icon != null);
+
+      await tester.pumpApp(GameCatalogTile(entry: entry));
+
+      expect(find.byIcon(entry.icon!), findsOneWidget);
+    });
+
+    testWidgets('show the label when the entry has no icon', (tester) async {
+      final entry = GameCatalog.entries.firstWhere((e) => e.icon == null);
+
+      await tester.pumpApp(GameCatalogTile(entry: entry));
+
+      expect(find.text(entry.iconLabel!), findsOneWidget);
+    });
+  });
 }

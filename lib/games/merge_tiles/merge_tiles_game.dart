@@ -83,6 +83,8 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
   /// closed mid-move would otherwise come back to disposed notifiers.
   bool _isTornDown = false;
 
+  late BoardGrid grid;
+
   double _cellSize = 0;
   Vector2 _boardOrigin = Vector2.zero();
   Vector2? _dragFrom;
@@ -107,6 +109,12 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
   Future<void> onLoad() async {
     bestScoreNotifier.value = records.read(recordGameId, recordMetric);
     _measure();
+    // Behind the tiles, and behind the one being swallowed by a merge.
+    grid = BoardGrid()
+      ..position = _boardOrigin
+      ..size = Vector2.all(_cellSize * gridSize)
+      ..priority = -2;
+    await add(grid);
     await _spawnTile();
     await _spawnTile();
   }
@@ -116,6 +124,9 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
     super.onGameResize(size);
     if (board.every((tile) => tile == null)) return;
     _measure();
+    grid
+      ..position = _boardOrigin
+      ..size = Vector2.all(_cellSize * gridSize);
     for (final tile in board) {
       if (tile == null) continue;
       tile
