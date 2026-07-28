@@ -15,6 +15,18 @@ void main() {
       expect(records.read('star_catcher', 'score'), isNull);
     });
 
+    test('does not count an empty run as a record', () async {
+      final isRecord = await records.submit(
+        'star_catcher',
+        'score',
+        0,
+        goal: RecordGoal.higher,
+      );
+
+      expect(isRecord, isFalse);
+      expect(records.read('star_catcher', 'score'), isNull);
+    });
+
     test('counts the first result as a record', () async {
       final isRecord = await records.submit(
         'star_catcher',

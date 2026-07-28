@@ -51,6 +51,9 @@ class GameRecords {
     int value, {
     required RecordGoal goal,
   }) {
+    // A run that achieved nothing is not worth celebrating, even as a first.
+    if (goal == RecordGoal.higher && value <= 0) return false;
+
     final current = read(gameId, metric);
     return current == null ||
         (goal == RecordGoal.higher ? value > current : value < current);

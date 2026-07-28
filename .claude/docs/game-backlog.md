@@ -16,6 +16,7 @@ design pass first.
 - **Colour Sequence** — `lib/games/colour_sequence/`. Memory; record is rounds repeated.
 - **Block Fit** — `lib/games/block_fit/`. Block puzzle; record is the high score.
 - **Stack Tower** — `lib/games/stack_tower/`. Timing; record is the tallest tower.
+- **Tile Tap** — `lib/games/tile_tap/`. Rhythm/reflex; record is tiles hit.
 - **Merge Tiles** — `lib/games/merge_tiles/`. The 2048 shape. The record is the score rather
   than the biggest tile, because the menu reads `Best: 3540 points` far better than
   `Best: 512 tiles`; the biggest tile is shown in the HUD during a run instead.
@@ -67,8 +68,7 @@ which is a genuine design pass rather than a single mechanic.
 
 Requirement 4 says a run must not be pure attrition. Per game:
 
-- Tile Tap — one skipped row, earned rather than given (Block Fit ships the earned tray swap)
-- Snake — a rare bonus that shrinks the tail (Stack Tower ships the perfect-drop widening)
+- Snake — a rare bonus that shrinks the tail
 - One Tap Flyer, Road Hop, Sky Hopper, Endless Runner — a shield that eats one collision
 - Memory Pairs — a single undo, since it is a thinking game rather than a reflex one
   (Merge Tiles ships an undo, with another earned per new biggest tile)
