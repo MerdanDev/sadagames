@@ -297,6 +297,17 @@ void main() {
 
   group('Basket', () {
     testWithGame<StarCatcherGame>(
+      'is drawn in front of the falling pieces',
+      buildGame,
+      (game) async {
+        final star = Star(position: Vector2(10, 10), speed: 0);
+        await game.ensureAdd(star);
+
+        expect(game.basket.priority, greaterThan(star.priority));
+      },
+    );
+
+    testWithGame<StarCatcherGame>(
       'stays inside the screen bounds',
       buildGame,
       (game) async {

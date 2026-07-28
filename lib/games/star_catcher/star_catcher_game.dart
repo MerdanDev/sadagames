@@ -78,7 +78,9 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
   @override
   Future<void> onLoad() async {
     bestScoreNotifier.value = records.read(recordGameId, recordMetric);
-    basket = Basket(position: Vector2(size.x / 2, size.y - 110));
+    // Above the falling pieces, so a star slides behind the basket as it is
+    // caught rather than flashing across the front of it.
+    basket = Basket(position: Vector2(size.x / 2, size.y - 110))..priority = 1;
     await add(basket);
   }
 
