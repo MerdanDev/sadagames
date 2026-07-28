@@ -13,28 +13,50 @@ design pass first.
 ## Shipped
 
 - **Odd One Out** — `lib/games/odd_one_out/`. Perception; record is the furthest level.
+- **Colour Sequence** — `lib/games/colour_sequence/`. Memory; record is rounds repeated.
+
+## What actually sells on the Play Store
+
+Checked July 2026. The pattern behind the top simple games is worth copying even though the
+titles are not:
+
+- **Block Blast** (300M+ downloads) and the whole `1010!`-style block-fitting genre are the
+  clearest hit shape right now: drag pieces onto a grid, clear lines, no timer, endless.
+- **Subway Surfers** (4B+ lifetime) and **Slice It All** are the endless-runner and
+  satisfying-physics shapes; already covered below by Endless Runner.
+- **Magic Tiles 3** shows the piano-tile shape still performs — and it maps neatly onto the
+  pitch-shifted audio trick this repo already uses.
+- **Crossy Road** remains the reference for tap-to-hop arcade.
+- Merge and match-3 (**Merge Mansion**, **Candy Crush**) dominate by revenue, but both need
+  content pipelines and art, which is the wrong shape for this collection.
+
+Common thread: one mechanic, playable offline in seconds, endless rather than level-packed.
+That is the same bar as `game-engagement.md`, so the list below is ordered to match.
 
 ## Next up
 
 | # | Game | Genre | Core loop | Record | Effort |
 |---|---|---|---|---|---|
-| 1 | Colour Sequence | Memory | Four pads flash a growing sequence, repeat it back | Longest sequence | S |
+| 1 | Block Fit | Block puzzle | Drag pieces onto a grid, clear full rows and columns | High score | M |
 | 2 | Stack Tower | Timing | A block slides across, tap to drop it; overhang is trimmed off | Tallest tower | S |
+| 3 | Tile Tap | Rhythm/reflex | Tap the dark tiles as the column scrolls, faster each row | Tiles tapped | S |
 
-**Why these two next.** Each is one mechanic and needs no assets: Colour Sequence gets its whole
-personality from the pitch-shifted `effect.mp3` trick already used in Star Catcher, and Stack
-Tower is one moving rectangle and a `MoveToEffect`.
+**Why these next.** Block Fit is the genre currently doing the numbers and the repo already has
+the grid and drag pieces to build it from; Stack Tower is one moving rectangle and a
+`MoveToEffect`; Tile Tap is the `Magic Tiles` shape and gets its feel from pitching
+`effect.mp3` per column, which costs nothing.
 
 ## After that
 
 | # | Game | Genre | Core loop | Record | Effort |
 |---|---|---|---|---|---|
-| 3 | Snake | Arcade | Swipe to steer, eat, grow, avoid yourself | Longest snake | M |
-| 4 | Memory Pairs | Thinking | Flip cards two at a time to find matching pairs | Fewest flips | M |
-| 5 | One Tap Flyer | Reflex | Tap to flap through gaps that keep narrowing | Gaps passed | M |
-| 6 | 2048 | Puzzle | Swipe to merge equal tiles | Highest tile | M |
-| 7 | Sky Hopper | Doodle/platformer | Auto-jump upward, drag to steer between platforms | Height climbed | L |
-| 8 | Endless Runner | Doodle/runner | Auto-run, tap to jump obstacles that speed up | Distance | L |
+| 4 | Snake | Arcade | Swipe to steer, eat, grow, avoid yourself | Longest snake | M |
+| 5 | Memory Pairs | Thinking | Flip cards two at a time to find matching pairs | Fewest flips | M |
+| 6 | One Tap Flyer | Reflex | Tap to flap through gaps that keep narrowing | Gaps passed | M |
+| 7 | 2048 | Puzzle | Swipe to merge equal tiles | Highest tile | M |
+| 8 | Road Hop | Arcade | Tap to hop forward, dodge the traffic, never stop | Squares crossed | M |
+| 9 | Sky Hopper | Doodle/platformer | Auto-jump upward, drag to steer between platforms | Height climbed | L |
+| 10 | Endless Runner | Doodle/runner | Auto-run, tap to jump obstacles that speed up | Distance | L |
 
 Sky Hopper is the "doodle game" shape most people picture. It is last of the doodle set on
 purpose: it needs a scrolling camera, procedural platform generation and a fall-death rule,
@@ -44,9 +66,9 @@ which is a genuine design pass rather than a single mechanic.
 
 Requirement 4 says a run must not be pure attrition. Per game:
 
-- Colour Sequence — one forgiving mistake per run, shown as a spare life
+- Block Fit, Tile Tap — one clearing bomb or skipped row, earned rather than given
 - Stack Tower, Snake — a rare bonus that widens the block or shrinks the tail
-- One Tap Flyer, Sky Hopper, Endless Runner — a shield pickup that eats one collision
+- One Tap Flyer, Road Hop, Sky Hopper, Endless Runner — a shield that eats one collision
 - Memory Pairs, 2048 — a single undo, since these are thinking games rather than reflex ones
 
 ## Cross-cutting work
@@ -70,7 +92,10 @@ Worth doing between games rather than saving up:
 
 - **Word games** — need an offline dictionary, which is a real asset decision (size, licence,
   language). Revisit if the collection goes in a word direction.
-- **Rhythm games** — need licensed music, not one looping clip.
+- **Rhythm games proper** — need licensed music, not one looping clip. Tile Tap above is the
+  cheap version: it uses pitch, not a song.
+- **Match-3 and merge** — the biggest earners on the store, but both need an art and content
+  pipeline that a shapes-only collection cannot feed.
 - **Two-player or online** — out of scope while the app is a single-player local collection.
 - **Tic-tac-toe and similar** — no natural per-run record, so they fail requirement 5. Would
   need a streak-based framing to earn a slot.

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sadagames/game/game.dart';
+import 'package:sadagames/games/colour_sequence/colour_sequence.dart';
 import 'package:sadagames/games/odd_one_out/odd_one_out.dart';
 import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
 import 'package:sadagames/games/star_catcher/star_catcher.dart';
@@ -76,6 +77,16 @@ abstract final class GameCatalog {
       routeBuilder: OddOneOutPage.route,
       recordMetric: OddOneOutGame.recordMetric,
       recordUnit: 'level',
+    ),
+    GameCatalogEntry(
+      id: 'colour_sequence',
+      name: 'Colour Sequence',
+      description: 'Watch the pads flash, then play them back in order.',
+      icon: Icons.graphic_eq_rounded,
+      color: Color(0xFFE63946),
+      routeBuilder: ColourSequencePage.route,
+      recordMetric: ColourSequenceGame.recordMetric,
+      recordUnit: 'round',
     ),
     GameCatalogEntry(
       id: 'unicorn_tap',
