@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sadagames/game/game.dart';
+import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
 import 'package:sadagames/games/star_catcher/star_catcher.dart';
 
 /// A single entry of the game collection, as shown on the menu page.
@@ -42,6 +43,14 @@ abstract final class GameCatalog {
       icon: Icons.star_rounded,
       color: Color(0xFFFFD166),
       routeBuilder: StarCatcherPage.route,
+    ),
+    GameCatalogEntry(
+      id: 'sliding_puzzle',
+      name: 'Sliding Puzzle',
+      description: 'Slide the tiles back into order, fast.',
+      icon: Icons.grid_view_rounded,
+      color: Color(0xFF9B5DE5),
+      routeBuilder: SlidingPuzzlePage.route,
     ),
     GameCatalogEntry(
       id: 'unicorn_tap',
