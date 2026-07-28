@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sadagames/game/game.dart';
+import 'package:sadagames/games/block_fit/block_fit.dart';
 import 'package:sadagames/games/colour_sequence/colour_sequence.dart';
 import 'package:sadagames/games/odd_one_out/odd_one_out.dart';
 import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
@@ -48,6 +49,16 @@ class GameCatalogEntry {
 /// renders whatever this list contains.
 abstract final class GameCatalog {
   static const entries = <GameCatalogEntry>[
+    GameCatalogEntry(
+      id: 'block_fit',
+      name: 'Block Fit',
+      description: 'Drop the pieces in and clear full rows and columns.',
+      icon: Icons.dashboard_rounded,
+      color: Color(0xFF4CC9F0),
+      routeBuilder: BlockFitPage.route,
+      recordMetric: BlockFitGame.recordMetric,
+      recordUnit: 'point',
+    ),
     GameCatalogEntry(
       id: 'star_catcher',
       name: 'Star Catcher',

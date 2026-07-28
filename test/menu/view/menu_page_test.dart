@@ -17,6 +17,13 @@ void main() {
 
   group('MenuView', () {
     testWidgets('renders a tile for every catalog entry', (tester) async {
+      // The list builds lazily, so give it a surface tall enough to hold every
+      // entry at once rather than only the ones above the fold.
+      tester.view
+        ..physicalSize = const Size(1200, 4000)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
       await tester.pumpApp(const MenuView());
 
       expect(

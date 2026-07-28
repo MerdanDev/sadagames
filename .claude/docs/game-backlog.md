@@ -14,6 +14,7 @@ design pass first.
 
 - **Odd One Out** — `lib/games/odd_one_out/`. Perception; record is the furthest level.
 - **Colour Sequence** — `lib/games/colour_sequence/`. Memory; record is rounds repeated.
+- **Block Fit** — `lib/games/block_fit/`. Block puzzle; record is the high score.
 
 ## What actually sells on the Play Store
 
@@ -37,14 +38,12 @@ That is the same bar as `game-engagement.md`, so the list below is ordered to ma
 
 | # | Game | Genre | Core loop | Record | Effort |
 |---|---|---|---|---|---|
-| 1 | Block Fit | Block puzzle | Drag pieces onto a grid, clear full rows and columns | High score | M |
-| 2 | Stack Tower | Timing | A block slides across, tap to drop it; overhang is trimmed off | Tallest tower | S |
-| 3 | Tile Tap | Rhythm/reflex | Tap the dark tiles as the column scrolls, faster each row | Tiles tapped | S |
+| 1 | Stack Tower | Timing | A block slides across, tap to drop it; overhang is trimmed off | Tallest tower | S |
+| 2 | Tile Tap | Rhythm/reflex | Tap the dark tiles as the column scrolls, faster each row | Tiles tapped | S |
 
-**Why these next.** Block Fit is the genre currently doing the numbers and the repo already has
-the grid and drag pieces to build it from; Stack Tower is one moving rectangle and a
-`MoveToEffect`; Tile Tap is the `Magic Tiles` shape and gets its feel from pitching
-`effect.mp3` per column, which costs nothing.
+**Why these next.** Each is one mechanic and needs no assets: Stack Tower is one moving
+rectangle and a `MoveToEffect`; Tile Tap is the `Magic Tiles` shape and gets its feel from
+pitching `effect.mp3` per column, which costs nothing.
 
 ## After that
 
@@ -66,7 +65,7 @@ which is a genuine design pass rather than a single mechanic.
 
 Requirement 4 says a run must not be pure attrition. Per game:
 
-- Block Fit, Tile Tap — one clearing bomb or skipped row, earned rather than given
+- Tile Tap — one skipped row, earned rather than given (Block Fit ships the earned tray swap)
 - Stack Tower, Snake — a rare bonus that widens the block or shrinks the tail
 - One Tap Flyer, Road Hop, Sky Hopper, Endless Runner — a shield that eats one collision
 - Memory Pairs, 2048 — a single undo, since these are thinking games rather than reflex ones

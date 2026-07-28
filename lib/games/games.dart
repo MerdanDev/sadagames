@@ -1,3 +1,4 @@
+export 'block_fit/block_fit.dart';
 export 'colour_sequence/colour_sequence.dart';
 export 'game_catalog.dart';
 export 'odd_one_out/odd_one_out.dart';
