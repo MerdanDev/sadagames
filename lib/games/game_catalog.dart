@@ -4,6 +4,7 @@ import 'package:sadagames/games/block_fit/block_fit.dart';
 import 'package:sadagames/games/colour_sequence/colour_sequence.dart';
 import 'package:sadagames/games/odd_one_out/odd_one_out.dart';
 import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
+import 'package:sadagames/games/stack_tower/stack_tower.dart';
 import 'package:sadagames/games/star_catcher/star_catcher.dart';
 
 /// A single entry of the game collection, as shown on the menu page.
@@ -58,6 +59,16 @@ abstract final class GameCatalog {
       routeBuilder: BlockFitPage.route,
       recordMetric: BlockFitGame.recordMetric,
       recordUnit: 'point',
+    ),
+    GameCatalogEntry(
+      id: 'stack_tower',
+      name: 'Stack Tower',
+      description: 'Tap to drop each slab. Miss and it gets cut down.',
+      icon: Icons.layers_rounded,
+      color: Color(0xFF06D6A0),
+      routeBuilder: StackTowerPage.route,
+      recordMetric: StackTowerGame.recordMetric,
+      recordUnit: 'block',
     ),
     GameCatalogEntry(
       id: 'star_catcher',
