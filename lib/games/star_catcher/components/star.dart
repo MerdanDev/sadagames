@@ -1,15 +1,14 @@
 import 'dart:math';
 
-import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'package:sadagames/games/star_catcher/components/falling_collectible.dart';
 
 /// A star that falls from the top of the screen towards the basket.
-class Star extends PositionComponent {
-  Star({required super.position, required this.speed})
-    : super(size: Vector2.all(28), anchor: Anchor.center);
-
-  /// Falling speed in logical pixels per second.
-  final double speed;
+///
+/// Stars shrink as the player's score grows, which is what makes later rounds
+/// harder to catch.
+class Star extends FallingCollectible {
+  Star({required super.position, required super.speed, super.diameter = 30});
 
   late final Path _path = _buildPath();
 
@@ -43,7 +42,6 @@ class Star extends PositionComponent {
   @override
   void update(double dt) {
     super.update(dt);
-    position.y += speed * dt;
     angle += dt;
   }
 

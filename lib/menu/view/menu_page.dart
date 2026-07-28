@@ -62,8 +62,7 @@ class GameCatalogTile extends StatelessWidget {
         ),
         subtitle: Text(entry.description),
         trailing: const Icon(Icons.chevron_right_rounded),
-        onTap: () =>
-            Navigator.of(context).push<void>(entry.routeBuilder()),
+        onTap: () => Navigator.of(context).push<void>(entry.routeBuilder()),
       ),
     );
   }

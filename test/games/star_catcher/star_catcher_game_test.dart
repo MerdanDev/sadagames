@@ -1,13 +1,37 @@
+import 'dart:math';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/components.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:sadagames/games/star_catcher/star_catcher.dart';
+
+class _MockAudioPlayer extends Mock implements AudioPlayer {}
+
+class _AlwaysHeartRandom implements Random {
+  @override
+  bool nextBool() => true;
+
+  @override
+  double nextDouble() => 0;
+
+  @override
+  int nextInt(int max) => 0;
+}
+
+_MockAudioPlayer _audioPlayer() {
+  final player = _MockAudioPlayer();
+  when(() => player.setPlaybackRate(any())).thenAnswer((_) async {});
+  when(() => player.play(any())).thenAnswer((_) async {});
+  return player;
+}
 
 /// Builds the game with a stub overlay, which the `GameWidget` would otherwise
 /// register through its `overlayBuilderMap`.
-StarCatcherGame _buildGame() {
-  return StarCatcherGame()
+StarCatcherGame _buildGame({Random? random}) {
+  return StarCatcherGame(effectPlayer: _audioPlayer(), random: random)
     ..overlays.addEntry(
       StarCatcherGame.gameOverOverlayId,
       (_, _) => const SizedBox.shrink(),
@@ -25,6 +49,10 @@ Future<void> _loseAllLives(StarCatcherGame game) async {
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(AssetSource('effect.mp3'));
+  });
+
   group('StarCatcherGame', () {
     testWithGame<StarCatcherGame>(
       'starts with a full set of lives and no score',
@@ -37,13 +65,13 @@ void main() {
     );
 
     testWithGame<StarCatcherGame>(
-      'spawns stars over time',
+      'spawns collectibles over time',
       _buildGame,
       (game) async {
         game.update(1);
         await game.ready();
 
-        expect(game.children.query<Star>(), isNotEmpty);
+        expect(game.children.query<FallingCollectible>(), isNotEmpty);
       },
     );
 
@@ -104,6 +132,104 @@ void main() {
           game.overlays.isActive(StarCatcherGame.gameOverOverlayId),
           isFalse,
         );
+      },
+    );
+  });
+
+  group('hearts', () {
+    testWithGame<StarCatcherGame>(
+      'refill a life when caught',
+      _buildGame,
+      (game) async {
+        await game.ensureAdd(_missedStar(game));
+        game.update(0);
+        expect(game.lives, equals(StarCatcherGame.maxLives - 1));
+
+        await game.ensureAdd(
+          Heart(position: game.basket.position.clone(), speed: 0),
+        );
+        game.update(0);
+
+        expect(game.lives, equals(StarCatcherGame.maxLives));
+      },
+    );
+
+    testWithGame<StarCatcherGame>(
+      'never take the player above the maximum lives',
+      _buildGame,
+      (game) async {
+        await game.ensureAdd(
+          Heart(position: game.basket.position.clone(), speed: 0),
+        );
+        game.update(0);
+
+        expect(game.lives, equals(StarCatcherGame.maxLives));
+      },
+    );
+
+    testWithGame<StarCatcherGame>(
+      'do not cost a life when missed',
+      _buildGame,
+      (game) async {
+        await game.ensureAdd(
+          Heart(position: Vector2(10, game.size.y + 100), speed: 0),
+        );
+        game.update(0);
+
+        expect(game.lives, equals(StarCatcherGame.maxLives));
+      },
+    );
+
+    testWithGame<StarCatcherGame>(
+      'only drop once the unlock score is reached and a life is missing',
+      () => _buildGame(random: _AlwaysHeartRandom()),
+      (game) async {
+        // Below the unlock score only stars drop, even with a life missing.
+        await game.ensureAdd(_missedStar(game));
+        game
+          ..update(0)
+          ..update(1);
+        await game.ready();
+        expect(game.children.query<Heart>(), isEmpty);
+
+        // Once the score is high enough, hearts start dropping.
+        for (var i = 0; i < StarCatcherGame.heartUnlockScore; i++) {
+          await game.ensureAdd(
+            Star(position: game.basket.position.clone(), speed: 0),
+          );
+          game.update(0);
+        }
+        game.update(1);
+        await game.ready();
+
+        expect(game.children.query<Heart>(), isNotEmpty);
+      },
+    );
+  });
+
+  group('stars', () {
+    testWithGame<StarCatcherGame>(
+      'shrink as the score grows',
+      _buildGame,
+      (game) async {
+        game.update(1);
+        await game.ready();
+        final initialDiameter = game.children.query<Star>().first.size.x;
+
+        for (var i = 0; i < 10; i++) {
+          await game.ensureAdd(
+            Star(position: game.basket.position.clone(), speed: 0),
+          );
+          game.update(0);
+        }
+        game.update(1);
+        await game.ready();
+
+        final laterDiameter = game.children
+            .query<Star>()
+            .map((star) => star.size.x)
+            .reduce(min);
+        expect(laterDiameter, lessThan(initialDiameter));
       },
     );
   });

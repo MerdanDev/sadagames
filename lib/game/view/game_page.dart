@@ -27,7 +27,9 @@ class GamePage extends StatelessWidget {
           backgroundMusic: Bgm(audioCache: audioCache),
         );
       },
-      child: const Scaffold(body: SafeArea(child: GameView())),
+      // No SafeArea here on purpose: the game fills the screen edge to edge and
+      // only the controls are inset.
+      child: const Scaffold(body: GameView()),
     );
   }
 }
@@ -76,17 +78,30 @@ class _GameViewState extends State<GameView> {
     return Stack(
       children: [
         Positioned.fill(child: GameWidget(game: _game!)),
-        Align(
-          alignment: Alignment.topRight,
-          child: BlocBuilder<AudioCubit, AudioState>(
-            builder: (context, state) {
-              return IconButton(
-                icon: Icon(
-                  state.volume == 0 ? Icons.volume_off : Icons.volume_up,
+        SafeArea(
+          child: Align(
+            alignment: Alignment.topRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                BlocBuilder<AudioCubit, AudioState>(
+                  builder: (context, state) {
+                    return IconButton(
+                      icon: Icon(
+                        state.volume == 0 ? Icons.volume_off : Icons.volume_up,
+                        color: Colors.white,
+                      ),
+                      onPressed: () =>
+                          context.read<AudioCubit>().toggleVolume(),
+                    );
+                  },
                 ),
-                onPressed: () => context.read<AudioCubit>().toggleVolume(),
-              );
-            },
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
           ),
         ),
       ],
