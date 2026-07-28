@@ -7,6 +7,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:sadagames/games/sliding_puzzle/components/components.dart';
 import 'package:sadagames/gen/assets.gen.dart';
+import 'package:sadagames/records/records.dart';
 
 /// A classic sliding puzzle: put the tiles back in order in as few moves as
 /// possible.
@@ -14,11 +15,18 @@ import 'package:sadagames/gen/assets.gen.dart';
 /// The board is shuffled by replaying random legal moves from the solved state,
 /// which guarantees every shuffle can actually be solved.
 class SlidingPuzzleGame extends FlameGame {
-  SlidingPuzzleGame({required this.effectPlayer, Random? random})
-    : _random = random ?? Random();
+  SlidingPuzzleGame({
+    required this.effectPlayer,
+    required this.records,
+    Random? random,
+  }) : _random = random ?? Random();
 
   /// Identifier of the solved overlay rendered by the Flutter layer.
   static const solvedOverlayId = 'slidingPuzzleSolved';
+
+  /// Catalog id and metric this game stores its personal best under.
+  static const recordGameId = 'sliding_puzzle';
+  static const recordMetric = 'moves';
 
   /// Tiles per row and per column.
   static const gridSize = 3;
@@ -31,6 +39,9 @@ class SlidingPuzzleGame extends FlameGame {
 
   /// Player used for the short slide and win sound effects.
   final AudioPlayer effectPlayer;
+
+  /// Store holding the player's fewest solved moves between launches.
+  final GameRecords records;
 
   final Random _random;
 
@@ -47,7 +58,15 @@ class SlidingPuzzleGame extends FlameGame {
   /// Seconds elapsed since the first move.
   final ValueNotifier<int> secondsNotifier = ValueNotifier(0);
 
+  /// Fewest moves the puzzle has been solved in, or `null` if never solved.
+  final ValueNotifier<int?> bestMovesNotifier = ValueNotifier(null);
+
+  int? get bestMoves => bestMovesNotifier.value;
+
   bool isSolved = false;
+
+  /// Whether the solve that just happened beat the previous best.
+  bool isNewRecord = false;
 
   bool _isRunning = false;
   double _elapsed = 0;
@@ -61,6 +80,7 @@ class SlidingPuzzleGame extends FlameGame {
 
   @override
   Future<void> onLoad() async {
+    bestMovesNotifier.value = records.read(recordGameId, recordMetric);
     shuffle();
     _measureBoard();
 
@@ -168,6 +188,18 @@ class SlidingPuzzleGame extends FlameGame {
     isSolved = true;
     _isRunning = false;
     unawaited(_playEffect(rate: 0.9));
+    // Decide and show straight away; the write itself can settle in the
+    // background rather than holding up the overlay.
+    isNewRecord = records.beatsRecord(
+      recordGameId,
+      recordMetric,
+      moves,
+      goal: RecordGoal.lower,
+    );
+    if (isNewRecord) bestMovesNotifier.value = moves;
+    unawaited(
+      records.submit(recordGameId, recordMetric, moves, goal: RecordGoal.lower),
+    );
     overlays.add(solvedOverlayId);
   }
 
@@ -201,6 +233,7 @@ class SlidingPuzzleGame extends FlameGame {
     _elapsed = 0;
     _isRunning = false;
     isSolved = false;
+    isNewRecord = false;
     overlays.remove(solvedOverlayId);
   }
 
@@ -208,6 +241,7 @@ class SlidingPuzzleGame extends FlameGame {
   void onRemove() {
     movesNotifier.dispose();
     secondsNotifier.dispose();
+    bestMovesNotifier.dispose();
     super.onRemove();
   }
 }

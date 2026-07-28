@@ -10,6 +10,7 @@ import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
 import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/loading/cubit/cubit.dart';
+import 'package:sadagames/records/records.dart';
 
 class SlidingPuzzlePage extends StatelessWidget {
   const SlidingPuzzlePage({super.key});
@@ -55,6 +56,7 @@ class _SlidingPuzzleViewState extends State<SlidingPuzzleView> {
         widget.game ??
         SlidingPuzzleGame(
           effectPlayer: context.read<AudioCubit>().effectPlayer,
+          records: context.read<GameRecords>(),
         );
     bgm = context.read<AudioCubit>().bgm;
     unawaited(bgm.play(Assets.audio.background));
@@ -99,6 +101,8 @@ class _SlidingPuzzleViewState extends State<SlidingPuzzleView> {
                     value: _game.secondsNotifier,
                     suffix: 's',
                   ),
+                  const SizedBox(width: 16),
+                  _BestLabel(best: _game.bestMovesNotifier),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(
@@ -170,6 +174,41 @@ class _CounterLabel extends StatelessWidget {
   }
 }
 
+/// Shows the fewest moves the puzzle has ever been solved in.
+class _BestLabel extends StatelessWidget {
+  const _BestLabel({required this.best});
+
+  final ValueListenable<int?> best;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int?>(
+      valueListenable: best,
+      builder: (context, record, _) {
+        if (record == null) return const SizedBox.shrink();
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.emoji_events_rounded,
+              color: Color(0xFFFFD166),
+              size: 20,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '$record',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _SolvedOverlay extends StatelessWidget {
   const _SolvedOverlay({required this.game});
 
@@ -191,8 +230,17 @@ class _SolvedOverlay extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${game.moves} moves in ${game.secondsNotifier.value}s',
+              '${formatRecord(game.moves, 'move')} in '
+              '${game.secondsNotifier.value}s',
               style: textTheme.bodyLarge?.copyWith(color: Colors.white70),
+            ),
+            const SizedBox(height: 8),
+            RecordLine(
+              isNewRecord: game.isNewRecord,
+              text: game.isNewRecord
+                  ? 'New record!'
+                  : 'Best: '
+                        '${formatRecord(game.bestMoves ?? game.moves, 'move')}',
             ),
             const SizedBox(height: 24),
             ElevatedButton(

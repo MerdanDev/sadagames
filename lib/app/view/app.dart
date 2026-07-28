@@ -7,26 +7,33 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sadagames/l10n/l10n.dart';
 import 'package:sadagames/loading/loading.dart';
+import 'package:sadagames/records/records.dart';
 
 class App extends StatelessWidget {
-  const App({super.key});
+  const App({required this.records, super.key});
+
+  /// Personal bests, loaded before the app starts.
+  final GameRecords records;
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) {
-            final cubit = PreloadCubit(
-              Images(prefix: ''),
-              AudioCache(prefix: ''),
-            );
-            unawaited(cubit.loadSequentially());
-            return cubit;
-          },
-        ),
-      ],
-      child: const AppView(),
+    return RepositoryProvider.value(
+      value: records,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) {
+              final cubit = PreloadCubit(
+                Images(prefix: ''),
+                AudioCache(prefix: ''),
+              );
+              unawaited(cubit.loadSequentially());
+              return cubit;
+            },
+          ),
+        ],
+        child: const AppView(),
+      ),
     );
   }
 }

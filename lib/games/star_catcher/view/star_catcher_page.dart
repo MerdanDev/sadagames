@@ -10,6 +10,7 @@ import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/games/star_catcher/star_catcher.dart';
 import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/loading/cubit/cubit.dart';
+import 'package:sadagames/records/records.dart';
 
 class StarCatcherPage extends StatelessWidget {
   const StarCatcherPage({super.key});
@@ -53,7 +54,10 @@ class _StarCatcherViewState extends State<StarCatcherView> {
     super.initState();
     _game =
         widget.game ??
-        StarCatcherGame(effectPlayer: context.read<AudioCubit>().effectPlayer);
+        StarCatcherGame(
+          effectPlayer: context.read<AudioCubit>().effectPlayer,
+          records: context.read<GameRecords>(),
+        );
     bgm = context.read<AudioCubit>().bgm;
     unawaited(bgm.play(Assets.audio.background));
   }
@@ -87,7 +91,10 @@ class _StarCatcherViewState extends State<StarCatcherView> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  _ScoreLabel(score: _game.scoreNotifier),
+                  _ScoreLabel(
+                    score: _game.scoreNotifier,
+                    best: _game.bestScoreNotifier,
+                  ),
                   const Spacer(),
                   _LivesIndicator(lives: _game.livesNotifier),
                   BlocBuilder<AudioCubit, AudioState>(
@@ -119,21 +126,40 @@ class _StarCatcherViewState extends State<StarCatcherView> {
 }
 
 class _ScoreLabel extends StatelessWidget {
-  const _ScoreLabel({required this.score});
+  const _ScoreLabel({required this.score, required this.best});
 
   final ValueListenable<int> score;
+  final ValueListenable<int?> best;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return ValueListenableBuilder<int>(
       valueListenable: score,
       builder: (context, value, _) {
-        return Text(
-          'Score: $value',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Score: $value',
+              style: textTheme.titleMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            ValueListenableBuilder<int?>(
+              valueListenable: best,
+              builder: (context, record, _) {
+                if (record == null) return const SizedBox.shrink();
+                return Text(
+                  'Best: $record',
+                  style: textTheme.bodySmall?.copyWith(color: Colors.white70),
+                );
+              },
+            ),
+          ],
         );
       },
     );
@@ -187,8 +213,16 @@ class _GameOverOverlay extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'You caught ${game.score} stars',
+              'You caught ${formatRecord(game.score, 'star')}',
               style: textTheme.bodyLarge?.copyWith(color: Colors.white70),
+            ),
+            const SizedBox(height: 8),
+            RecordLine(
+              isNewRecord: game.isNewRecord,
+              text: game.isNewRecord
+                  ? 'New record!'
+                  : 'Best: '
+                        '${formatRecord(game.bestScore ?? game.score, 'star')}',
             ),
             const SizedBox(height: 24),
             ElevatedButton(

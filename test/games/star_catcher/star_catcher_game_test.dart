@@ -7,6 +7,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sadagames/games/star_catcher/star_catcher.dart';
+import 'package:sadagames/records/records.dart';
+
+import '../../helpers/helpers.dart';
 
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
@@ -30,8 +33,12 @@ _MockAudioPlayer _audioPlayer() {
 
 /// Builds the game with a stub overlay, which the `GameWidget` would otherwise
 /// register through its `overlayBuilderMap`.
-StarCatcherGame _buildGame({Random? random}) {
-  return StarCatcherGame(effectPlayer: _audioPlayer(), random: random)
+StarCatcherGame _buildGameWith(GameRecords records, {Random? random}) {
+  return StarCatcherGame(
+      effectPlayer: _audioPlayer(),
+      records: records,
+      random: random,
+    )
     ..overlays.addEntry(
       StarCatcherGame.gameOverOverlayId,
       (_, _) => const SizedBox.shrink(),
@@ -49,14 +56,32 @@ Future<void> _loseAllLives(StarCatcherGame game) async {
 }
 
 void main() {
+  late GameRecords records;
+  late GameRecords recordsWithBest;
+
   setUpAll(() {
     registerFallbackValue(AssetSource('effect.mp3'));
   });
 
+  setUp(() async {
+    records = await createTestRecords();
+  });
+
+  setUp(() async {
+    recordsWithBest = await createTestRecords({
+      'record.${StarCatcherGame.recordGameId}.'
+              '${StarCatcherGame.recordMetric}':
+          42,
+    });
+  });
+
+  StarCatcherGame buildGame({Random? random}) =>
+      _buildGameWith(records, random: random);
+
   group('StarCatcherGame', () {
     testWithGame<StarCatcherGame>(
       'starts with a full set of lives and no score',
-      _buildGame,
+      buildGame,
       (game) async {
         expect(game.score, equals(0));
         expect(game.lives, equals(StarCatcherGame.maxLives));
@@ -66,7 +91,7 @@ void main() {
 
     testWithGame<StarCatcherGame>(
       'spawns collectibles over time',
-      _buildGame,
+      buildGame,
       (game) async {
         game.update(1);
         await game.ready();
@@ -77,7 +102,7 @@ void main() {
 
     testWithGame<StarCatcherGame>(
       'scores a point when a star reaches the basket',
-      _buildGame,
+      buildGame,
       (game) async {
         final star = Star(position: game.basket.position.clone(), speed: 0);
         await game.ensureAdd(star);
@@ -91,7 +116,7 @@ void main() {
 
     testWithGame<StarCatcherGame>(
       'loses a life when a star falls past the bottom',
-      _buildGame,
+      buildGame,
       (game) async {
         await game.ensureAdd(_missedStar(game));
 
@@ -103,7 +128,7 @@ void main() {
 
     testWithGame<StarCatcherGame>(
       'ends the game once every life is lost',
-      _buildGame,
+      buildGame,
       (game) async {
         await _loseAllLives(game);
 
@@ -118,7 +143,7 @@ void main() {
 
     testWithGame<StarCatcherGame>(
       'restart resets the score, lives and overlay',
-      _buildGame,
+      buildGame,
       (game) async {
         await _loseAllLives(game);
         expect(game.isGameOver, isTrue);
@@ -139,7 +164,7 @@ void main() {
   group('hearts', () {
     testWithGame<StarCatcherGame>(
       'refill a life when caught',
-      _buildGame,
+      buildGame,
       (game) async {
         await game.ensureAdd(_missedStar(game));
         game.update(0);
@@ -156,7 +181,7 @@ void main() {
 
     testWithGame<StarCatcherGame>(
       'never take the player above the maximum lives',
-      _buildGame,
+      buildGame,
       (game) async {
         await game.ensureAdd(
           Heart(position: game.basket.position.clone(), speed: 0),
@@ -169,7 +194,7 @@ void main() {
 
     testWithGame<StarCatcherGame>(
       'do not cost a life when missed',
-      _buildGame,
+      buildGame,
       (game) async {
         await game.ensureAdd(
           Heart(position: Vector2(10, game.size.y + 100), speed: 0),
@@ -182,7 +207,7 @@ void main() {
 
     testWithGame<StarCatcherGame>(
       'only drop once the unlock score is reached and a life is missing',
-      () => _buildGame(random: _AlwaysHeartRandom()),
+      () => buildGame(random: _AlwaysHeartRandom()),
       (game) async {
         // Below the unlock score only stars drop, even with a life missing.
         await game.ensureAdd(_missedStar(game));
@@ -207,10 +232,55 @@ void main() {
     );
   });
 
+  group('records', () {
+    testWithGame<StarCatcherGame>(
+      'stores the score when the run ends',
+      buildGame,
+      (game) async {
+        await game.ensureAdd(
+          Star(position: game.basket.position.clone(), speed: 0),
+        );
+        game.update(0);
+        await _loseAllLives(game);
+        await game.ready();
+
+        expect(
+          records.read(
+            StarCatcherGame.recordGameId,
+            StarCatcherGame.recordMetric,
+          ),
+          equals(1),
+        );
+        expect(game.isNewRecord, isTrue);
+        expect(game.bestScore, equals(1));
+      },
+    );
+
+    testWithGame<StarCatcherGame>(
+      'loads the stored best when the game opens',
+      () => _buildGameWith(recordsWithBest),
+      (game) async {
+        expect(game.bestScore, equals(42));
+      },
+    );
+
+    testWithGame<StarCatcherGame>(
+      'does not flag a record when the score falls short',
+      () => _buildGameWith(recordsWithBest),
+      (game) async {
+        await _loseAllLives(game);
+        await game.ready();
+
+        expect(game.isNewRecord, isFalse);
+        expect(game.bestScore, equals(42));
+      },
+    );
+  });
+
   group('stars', () {
     testWithGame<StarCatcherGame>(
       'shrink as the score grows',
-      _buildGame,
+      buildGame,
       (game) async {
         game.update(1);
         await game.ready();
@@ -237,7 +307,7 @@ void main() {
   group('Basket', () {
     testWithGame<StarCatcherGame>(
       'stays inside the screen bounds',
-      _buildGame,
+      buildGame,
       (game) async {
         game.basket.moveTo(-500, game.size.x);
         expect(game.basket.position.x, equals(game.basket.size.x / 2));

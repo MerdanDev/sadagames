@@ -7,6 +7,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:sadagames/games/star_catcher/components/components.dart';
 import 'package:sadagames/gen/assets.gen.dart';
+import 'package:sadagames/records/records.dart';
 
 /// A small arcade game: drag the basket to catch the falling stars.
 ///
@@ -14,11 +15,18 @@ import 'package:sadagames/gen/assets.gen.dart';
 /// a little, so the game keeps getting harder. Missing a star costs a life;
 /// hearts drop in once the player is warmed up and give a life back.
 class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
-  StarCatcherGame({required this.effectPlayer, Random? random})
-    : _random = random ?? Random();
+  StarCatcherGame({
+    required this.effectPlayer,
+    required this.records,
+    Random? random,
+  }) : _random = random ?? Random();
 
   /// Identifier of the game over overlay rendered by the Flutter layer.
   static const gameOverOverlayId = 'starCatcherGameOver';
+
+  /// Catalog id and metric this game stores its personal best under.
+  static const recordGameId = 'star_catcher';
+  static const recordMetric = 'score';
 
   /// Amount of stars the player may miss before the game ends.
   static const maxLives = 3;
@@ -36,6 +44,9 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
   /// Player used for the short catch and miss sound effects.
   final AudioPlayer effectPlayer;
 
+  /// Store holding the player's best score between launches.
+  final GameRecords records;
+
   final Random _random;
 
   late final Basket basket;
@@ -46,11 +57,19 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
   /// Remaining lives, exposed so the Flutter HUD can rebuild on change.
   final ValueNotifier<int> livesNotifier = ValueNotifier(maxLives);
 
+  /// Best score so far, or `null` until the first run ends.
+  final ValueNotifier<int?> bestScoreNotifier = ValueNotifier(null);
+
   int get score => scoreNotifier.value;
 
   int get lives => livesNotifier.value;
 
+  int? get bestScore => bestScoreNotifier.value;
+
   bool isGameOver = false;
+
+  /// Whether the run that just ended beat the previous best.
+  bool isNewRecord = false;
 
   double _spawnTimer = 0;
 
@@ -59,6 +78,7 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
 
   @override
   Future<void> onLoad() async {
+    bestScoreNotifier.value = records.read(recordGameId, recordMetric);
     basket = Basket(position: Vector2(size.x / 2, size.y - 110));
     await add(basket);
   }
@@ -149,6 +169,23 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
 
   void _endGame() {
     isGameOver = true;
+    // Decide and show straight away; the write itself can settle in the
+    // background rather than holding up the overlay.
+    isNewRecord = records.beatsRecord(
+      recordGameId,
+      recordMetric,
+      score,
+      goal: RecordGoal.higher,
+    );
+    if (isNewRecord) bestScoreNotifier.value = score;
+    unawaited(
+      records.submit(
+        recordGameId,
+        recordMetric,
+        score,
+        goal: RecordGoal.higher,
+      ),
+    );
     overlays.add(gameOverOverlayId);
   }
 
@@ -160,6 +197,7 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
     scoreNotifier.value = 0;
     livesNotifier.value = maxLives;
     isGameOver = false;
+    isNewRecord = false;
     _spawnTimer = 0;
     basket.moveTo(size.x / 2, size.x);
     overlays.remove(gameOverOverlayId);
@@ -181,6 +219,7 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
   void onRemove() {
     scoreNotifier.dispose();
     livesNotifier.dispose();
+    bestScoreNotifier.dispose();
     super.onRemove();
   }
 }

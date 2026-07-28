@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockingjay/mockingjay.dart';
 import 'package:sadagames/games/games.dart';
 import 'package:sadagames/menu/menu.dart';
+import 'package:sadagames/records/records.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -39,6 +40,50 @@ void main() {
       await tester.tap(find.byKey(Key('gameCatalogTile_${firstEntry.id}')));
 
       verify(() => navigator.push<void>(any())).called(1);
+    });
+  });
+
+  group('records on the menu', () {
+    testWidgets('are hidden until a game has been played', (tester) async {
+      await tester.pumpApp(const MenuView());
+
+      expect(find.textContaining('Best:'), findsNothing);
+    });
+
+    testWidgets('show the stored best for that game', (tester) async {
+      await tester.pumpApp(
+        const MenuView(),
+        records: await createTestRecords({'record.star_catcher.score': 12}),
+      );
+
+      expect(find.text('Best: 12 stars'), findsOneWidget);
+    });
+
+    testWidgets('use the singular unit for a best of one', (tester) async {
+      await tester.pumpApp(
+        const MenuView(),
+        records: await createTestRecords({'record.star_catcher.score': 1}),
+      );
+
+      expect(find.text('Best: 1 star'), findsOneWidget);
+    });
+
+    testWidgets('refresh when a record is set while the menu is alive', (
+      tester,
+    ) async {
+      final records = await createTestRecords();
+      await tester.pumpApp(const MenuView(), records: records);
+      expect(find.textContaining('Best:'), findsNothing);
+
+      await records.submit(
+        'star_catcher',
+        'score',
+        8,
+        goal: RecordGoal.higher,
+      );
+      await tester.pump();
+
+      expect(find.text('Best: 8 stars'), findsOneWidget);
     });
   });
 }

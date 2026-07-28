@@ -12,6 +12,8 @@ class GameCatalogEntry {
     required this.icon,
     required this.color,
     required this.routeBuilder,
+    this.recordMetric,
+    this.recordUnit = '',
   });
 
   /// Stable identifier, also used as the widget key on the menu page.
@@ -28,6 +30,14 @@ class GameCatalogEntry {
 
   /// Builds the route that starts this game.
   final Route<void> Function() routeBuilder;
+
+  /// Metric this game stores a personal best under, or `null` if it keeps no
+  /// record. Used to look the record up for the menu tile.
+  final String? recordMetric;
+
+  /// Singular word shown after the record, for example `star` or `move`. It is
+  /// pluralised for display.
+  final String recordUnit;
 }
 
 /// Every game available in the collection.
@@ -43,6 +53,8 @@ abstract final class GameCatalog {
       icon: Icons.star_rounded,
       color: Color(0xFFFFD166),
       routeBuilder: StarCatcherPage.route,
+      recordMetric: StarCatcherGame.recordMetric,
+      recordUnit: 'star',
     ),
     GameCatalogEntry(
       id: 'sliding_puzzle',
@@ -51,6 +63,8 @@ abstract final class GameCatalog {
       icon: Icons.grid_view_rounded,
       color: Color(0xFF9B5DE5),
       routeBuilder: SlidingPuzzlePage.route,
+      recordMetric: SlidingPuzzleGame.recordMetric,
+      recordUnit: 'move',
     ),
     GameCatalogEntry(
       id: 'unicorn_tap',

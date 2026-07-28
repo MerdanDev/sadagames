@@ -4,6 +4,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
+import 'package:sadagames/records/records.dart';
+
+import '../../helpers/helpers.dart';
 
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
@@ -16,8 +19,8 @@ _MockAudioPlayer _audioPlayer() {
 
 /// Builds the game with a stub overlay, which the `GameWidget` would otherwise
 /// register through its `overlayBuilderMap`.
-SlidingPuzzleGame _buildGame() {
-  return SlidingPuzzleGame(effectPlayer: _audioPlayer())
+SlidingPuzzleGame _buildGameWith(GameRecords records) {
+  return SlidingPuzzleGame(effectPlayer: _audioPlayer(), records: records)
     ..overlays.addEntry(
       SlidingPuzzleGame.solvedOverlayId,
       (_, _) => const SizedBox.shrink(),
@@ -36,14 +39,31 @@ void _setUpAlmostSolved(SlidingPuzzleGame game) {
 }
 
 void main() {
+  late GameRecords records;
+  late GameRecords recordsWithBest;
+
   setUpAll(() {
     registerFallbackValue(AssetSource('effect.mp3'));
   });
 
+  setUp(() async {
+    records = await createTestRecords();
+  });
+
+  setUp(() async {
+    recordsWithBest = await createTestRecords({
+      'record.${SlidingPuzzleGame.recordGameId}.'
+              '${SlidingPuzzleGame.recordMetric}':
+          1,
+    });
+  });
+
+  SlidingPuzzleGame buildGame() => _buildGameWith(records);
+
   group('SlidingPuzzleGame', () {
     testWithGame<SlidingPuzzleGame>(
       'starts shuffled, unsolved and with no moves played',
-      _buildGame,
+      buildGame,
       (game) async {
         expect(game.moves, equals(0));
         expect(game.isSolved, isFalse);
@@ -53,7 +73,7 @@ void main() {
 
     testWithGame<SlidingPuzzleGame>(
       'holds every tile exactly once plus the empty slot',
-      _buildGame,
+      buildGame,
       (game) async {
         final sorted = [...game.board]..sort();
         expect(sorted, equals([0, 1, 2, 3, 4, 5, 6, 7, 8]));
@@ -62,7 +82,7 @@ void main() {
 
     testWithGame<SlidingPuzzleGame>(
       'moves a tile that sits next to the empty slot',
-      _buildGame,
+      buildGame,
       (game) async {
         final movableSlot = List.generate(
           game.board.length,
@@ -81,7 +101,7 @@ void main() {
 
     testWithGame<SlidingPuzzleGame>(
       'refuses to move a tile that is not next to the empty slot',
-      _buildGame,
+      buildGame,
       (game) async {
         final blockedSlot =
             List.generate(
@@ -101,7 +121,7 @@ void main() {
 
     testWithGame<SlidingPuzzleGame>(
       'marks the puzzle solved when the last tile slides home',
-      _buildGame,
+      buildGame,
       (game) async {
         _setUpAlmostSolved(game);
 
@@ -117,7 +137,7 @@ void main() {
 
     testWithGame<SlidingPuzzleGame>(
       'ignores moves once solved',
-      _buildGame,
+      buildGame,
       (game) async {
         _setUpAlmostSolved(game);
         game.tryMoveValue(SlidingPuzzleGame.tileCount);
@@ -130,7 +150,7 @@ void main() {
 
     testWithGame<SlidingPuzzleGame>(
       'restart reshuffles and clears the counters',
-      _buildGame,
+      buildGame,
       (game) async {
         _setUpAlmostSolved(game);
         game.tryMoveValue(SlidingPuzzleGame.tileCount);
@@ -150,7 +170,7 @@ void main() {
 
     testWithGame<SlidingPuzzleGame>(
       'shuffle never leaves the board already solved',
-      _buildGame,
+      buildGame,
       (game) async {
         for (var i = 0; i < 20; i++) {
           game.shuffle();
@@ -165,8 +185,47 @@ void main() {
     );
 
     testWithGame<SlidingPuzzleGame>(
+      'stores the move count when the puzzle is solved',
+      buildGame,
+      (game) async {
+        _setUpAlmostSolved(game);
+        game.tryMoveValue(SlidingPuzzleGame.tileCount);
+        await game.ready();
+
+        expect(
+          records.read(
+            SlidingPuzzleGame.recordGameId,
+            SlidingPuzzleGame.recordMetric,
+          ),
+          equals(1),
+        );
+        expect(game.isNewRecord, isTrue);
+        expect(game.bestMoves, equals(1));
+      },
+    );
+
+    testWithGame<SlidingPuzzleGame>(
+      'keeps a better stored record when solved in more moves',
+      () => _buildGameWith(recordsWithBest),
+      (game) async {
+        expect(game.bestMoves, equals(1));
+
+        _setUpAlmostSolved(game);
+        // Waste a couple of moves before finishing.
+        game
+          ..tryMoveValue(SlidingPuzzleGame.tileCount - 1)
+          ..tryMoveValue(SlidingPuzzleGame.tileCount - 1)
+          ..tryMoveValue(SlidingPuzzleGame.tileCount);
+        await game.ready();
+
+        expect(game.isNewRecord, isFalse);
+        expect(game.bestMoves, equals(1));
+      },
+    );
+
+    testWithGame<SlidingPuzzleGame>(
       'counts up the timer only after the first move',
-      _buildGame,
+      buildGame,
       (game) async {
         game.update(3);
         expect(game.secondsNotifier.value, equals(0));

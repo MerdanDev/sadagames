@@ -23,6 +23,7 @@ Every command must run through `fvm` — see Gotchas.
 - `lib/games/<game>/` — one directory per game: `<game>_game.dart`, `components/`, `view/`
 - `lib/games/game_catalog.dart` — the list that drives the menu
 - `lib/menu/` — the game list screen
+- `lib/records/` — personal bests (shared_preferences) plus the shared record widget
 - `lib/game/` — the template's original unicorn demo, kept as a catalog entry
 - `lib/loading/`, `lib/title/` — preload and splash flow that runs before the menu
 - `lib/gen/`, `lib/l10n/gen/` — generated; never edit by hand
@@ -36,6 +37,10 @@ Each game is a `FlameGame` (simulation, drawing, input) paired with a page widge
 chrome). The game exposes `ValueNotifier`s for score-like values and the page renders them as
 the HUD; the game never builds widgets. End-of-run panels are Flame overlays registered in the
 page's `overlayBuilderMap`. Audio comes from `AudioCubit`, created per game page.
+
+`GameRecords` is loaded once before `runApp` and shared through a `RepositoryProvider`. Reads
+are synchronous, so a game decides whether a run was a record *before* showing its overlay and
+lets the write settle in the background — never block the end-of-run panel on I/O.
 
 ## Conventions
 

@@ -6,7 +6,7 @@ suggestions — a game that misses them does not go in the catalog.
 The bar: **a player who taps the game from the menu is playing within two seconds, understands
 it without being told, and wants one more run when it ends.**
 
-## The five requirements
+## The six requirements
 
 ### 1. Playable in two seconds
 
@@ -36,7 +36,18 @@ recover — a rare pickup, a bonus, a streak reward — and gate it so it appear
 matters (`Star Catcher` drops hearts only after the unlock score and only when a life is
 missing).
 
-### 5. A clean ending with one tap back in
+### 5. A number to beat
+
+Every game keeps a personal best through `GameRecords`, shown during play, called out on the
+end screen, and displayed on the game's menu tile. A run the player cannot compare to anything
+is a run they have no reason to repeat.
+
+Pick the metric the game is actually about and the direction that counts as better
+(`RecordGoal.higher` for a score, `RecordGoal.lower` for moves or time). Decide the record
+synchronously with `beatsRecord` so the end screen is instant, then persist with `submit` in
+the background.
+
+### 6. A clean ending with one tap back in
 
 Every run ends in an overlay that states the result in the player's terms ("You caught 12
 stars", "18 moves in 41s"), offers restart as the primary button, and leaves the menu one tap
@@ -57,16 +68,17 @@ away. Restart must reset state fully without rebuilding the page.
 
 ## Definition of done
 
-- [ ] Meets all five requirements above
+- [ ] Meets all six requirements above
 - [ ] Registered as a `const GameCatalogEntry` with a name, one-line description, icon, colour
 - [ ] `fvm flutter analyze` clean and `fvm dart format` applied
 - [ ] Game logic covered by `testWithGame` tests: scoring, failure, difficulty ramp, restart,
-      and any comeback mechanic
+      records, and any comeback mechanic
 - [ ] Played once on a simulator before calling it finished — tests do not catch a board that
       renders off screen
 
 ## Reference implementations
 
-- `lib/games/star_catcher/` — reflex game: shrinking targets, heart pickups, pitched feedback
-- `lib/games/sliding_puzzle/` — thinking game: animated slides, move and time counters,
-  shuffle-by-legal-moves so every board is solvable
+- `lib/games/star_catcher/` — reflex game: shrinking targets, heart pickups, pitched feedback,
+  best score kept across launches
+- `lib/games/sliding_puzzle/` — thinking game: animated slides, move and time counters, fewest
+  moves kept as the record, shuffle-by-legal-moves so every board is solvable
