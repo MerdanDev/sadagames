@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sadagames/game/game.dart';
 import 'package:sadagames/games/block_fit/block_fit.dart';
 import 'package:sadagames/games/colour_sequence/colour_sequence.dart';
+import 'package:sadagames/games/merge_tiles/merge_tiles.dart';
 import 'package:sadagames/games/odd_one_out/odd_one_out.dart';
 import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
 import 'package:sadagames/games/stack_tower/stack_tower.dart';
@@ -58,6 +59,16 @@ abstract final class GameCatalog {
       color: Color(0xFF4CC9F0),
       routeBuilder: BlockFitPage.route,
       recordMetric: BlockFitGame.recordMetric,
+      recordUnit: 'point',
+    ),
+    GameCatalogEntry(
+      id: 'merge_tiles',
+      name: 'Merge Tiles',
+      description: 'Swipe to slide the tiles and merge matching numbers.',
+      icon: Icons.grid_4x4_rounded,
+      color: Color(0xFFF3722C),
+      routeBuilder: MergeTilesPage.route,
+      recordMetric: MergeTilesGame.recordMetric,
       recordUnit: 'point',
     ),
     GameCatalogEntry(
