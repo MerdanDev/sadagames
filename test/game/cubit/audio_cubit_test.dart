@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
 
+import '../../helpers/helpers.dart';
+
 class _MockAudioCache extends Mock implements AudioCache {}
 
 class _MockAudioPlayer extends Mock implements AudioPlayer {}
@@ -40,13 +42,91 @@ void main() {
           );
     });
 
-    test(
-      'can be instantiated',
-      () => expect(
-        AudioCubit(audioPlayer: effectPlayer, backgroundMusic: bgm),
+    test('can be instantiated', () async {
+      when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
+      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
+
+      expect(
+        AudioCubit(
+          audioPlayer: effectPlayer,
+          backgroundMusic: bgm,
+          settings: await createTestSettings(),
+        ),
         isA<AudioCubit>(),
-      ),
-    );
+      );
+    });
+
+    test('starts unmuted when nothing was saved', () async {
+      when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
+      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
+
+      final cubit = AudioCubit(
+        audioPlayer: effectPlayer,
+        backgroundMusic: bgm,
+        settings: await createTestSettings(),
+      );
+
+      expect(cubit.state.volume, equals(1));
+    });
+
+    test('starts muted when the player muted it last time', () async {
+      when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
+      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
+
+      final cubit = AudioCubit(
+        audioPlayer: effectPlayer,
+        backgroundMusic: bgm,
+        settings: await createTestSettings(isMuted: true),
+      );
+
+      expect(cubit.state.volume, equals(0));
+    });
+
+    test('silences the players as soon as it is built while muted', () async {
+      when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
+      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
+
+      AudioCubit(
+        audioPlayer: effectPlayer,
+        backgroundMusic: bgm,
+        settings: await createTestSettings(isMuted: true),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      verify(() => effectPlayer.setVolume(0)).called(1);
+      verify(() => bgmPlayer.setVolume(0)).called(1);
+    });
+
+    test('remembers a mute for the next time', () async {
+      when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
+      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
+      final settings = await createTestSettings();
+
+      final cubit = AudioCubit.test(
+        effectPlayer: effectPlayer,
+        bgm: bgm,
+        settings: settings,
+      );
+      await cubit.toggleVolume();
+
+      expect(settings.isMuted, isTrue);
+    });
+
+    test('remembers unmuting too', () async {
+      when(() => effectPlayer.setVolume(any())).thenAnswer((_) async {});
+      when(() => bgmPlayer.setVolume(any())).thenAnswer((_) async {});
+      final settings = await createTestSettings(isMuted: true);
+
+      final cubit = AudioCubit.test(
+        effectPlayer: effectPlayer,
+        bgm: bgm,
+        settings: settings,
+        volume: 0,
+      );
+      await cubit.toggleVolume();
+
+      expect(settings.isMuted, isFalse);
+    });
 
     blocTest<AudioCubit, AudioState>(
       'toggleVolume mutes the volume when the volume is not 0',

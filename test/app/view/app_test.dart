@@ -6,7 +6,12 @@ import '../../helpers/helpers.dart';
 void main() {
   group('App', () {
     testWidgets('renders AppView', (tester) async {
-      await tester.pumpWidget(App(records: await createTestRecords()));
+      await tester.pumpWidget(
+        App(
+          records: await createTestRecords(),
+          settings: await createTestSettings(),
+        ),
+      );
 
       await tester.pumpAndSettle(const Duration(seconds: 400));
       expect(find.byType(AppView), findsOneWidget);

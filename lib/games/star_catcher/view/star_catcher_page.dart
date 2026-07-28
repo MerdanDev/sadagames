@@ -13,6 +13,7 @@ import 'package:sadagames/games/widgets/widgets.dart';
 import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/loading/cubit/cubit.dart';
 import 'package:sadagames/records/records.dart';
+import 'package:sadagames/settings/settings.dart';
 
 class StarCatcherPage extends StatelessWidget {
   const StarCatcherPage({super.key});
@@ -29,6 +30,7 @@ class StarCatcherPage extends StatelessWidget {
         return AudioCubit(
           audioPlayer: AudioPlayer()..audioCache = audioCache,
           backgroundMusic: Bgm(audioCache: audioCache),
+          settings: context.read<GameSettings>(),
         );
       },
       // No SafeArea here on purpose: the game fills the screen edge to edge and
@@ -60,8 +62,9 @@ class _StarCatcherViewState extends State<StarCatcherView> {
           sounds: GameSounds(context.read<AudioCubit>().effectPlayer),
           records: context.read<GameRecords>(),
         );
-    bgm = context.read<AudioCubit>().bgm;
-    unawaited(bgm.play(Assets.audio.background));
+    final audio = context.read<AudioCubit>();
+    bgm = audio.bgm;
+    unawaited(bgm.play(Assets.audio.background, volume: audio.state.volume));
   }
 
   @override

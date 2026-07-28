@@ -8,17 +8,24 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sadagames/l10n/l10n.dart';
 import 'package:sadagames/loading/loading.dart';
 import 'package:sadagames/records/records.dart';
+import 'package:sadagames/settings/settings.dart';
 
 class App extends StatelessWidget {
-  const App({required this.records, super.key});
+  const App({required this.records, required this.settings, super.key});
 
   /// Personal bests, loaded before the app starts.
   final GameRecords records;
 
+  /// Player preferences, loaded before the app starts.
+  final GameSettings settings;
+
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider.value(
-      value: records,
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider.value(value: records),
+        RepositoryProvider.value(value: settings),
+      ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider(

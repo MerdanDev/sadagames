@@ -10,6 +10,7 @@ import 'package:sadagames/game/game.dart';
 import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/l10n/l10n.dart';
 import 'package:sadagames/loading/cubit/cubit.dart';
+import 'package:sadagames/settings/settings.dart';
 
 class GamePage extends StatelessWidget {
   const GamePage({super.key});
@@ -26,6 +27,7 @@ class GamePage extends StatelessWidget {
         return AudioCubit(
           audioPlayer: AudioPlayer()..audioCache = audioCache,
           backgroundMusic: Bgm(audioCache: audioCache),
+          settings: context.read<GameSettings>(),
         );
       },
       // No SafeArea here on purpose: the game fills the screen edge to edge and
@@ -52,8 +54,9 @@ class _GameViewState extends State<GameView> {
   @override
   void initState() {
     super.initState();
-    bgm = context.read<AudioCubit>().bgm;
-    unawaited(bgm.play(Assets.audio.background));
+    final audio = context.read<AudioCubit>();
+    bgm = audio.bgm;
+    unawaited(bgm.play(Assets.audio.background, volume: audio.state.volume));
   }
 
   @override

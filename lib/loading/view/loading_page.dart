@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sadagames/l10n/l10n.dart';
 import 'package:sadagames/loading/loading.dart';
-import 'package:sadagames/title/title.dart';
+import 'package:sadagames/menu/menu.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -15,7 +15,7 @@ class _LoadingPageState extends State<LoadingPage> {
   Future<void> onPreloadComplete(NavigatorState navigator) async {
     await Future<void>.delayed(AnimatedProgressBar.intrinsicAnimationDuration);
     if (!mounted) return;
-    await navigator.pushReplacement<void, void>(TitlePage.route());
+    await navigator.pushReplacement<void, void>(MenuPage.route());
   }
 
   @override

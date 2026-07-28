@@ -6,9 +6,18 @@ import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/l10n/l10n.dart';
 import 'package:sadagames/loading/loading.dart';
 import 'package:sadagames/records/records.dart';
+import 'package:sadagames/settings/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helpers.dart';
+
+/// Builds settings backed by in-memory preferences.
+///
+/// Pass `isMuted: true` to start from a muted app.
+Future<GameSettings> createTestSettings({bool isMuted = false}) async {
+  SharedPreferences.setMockInitialValues({'settings.muted': isMuted});
+  return GameSettings(await SharedPreferences.getInstance());
+}
 
 /// Builds a records store backed by in-memory preferences.
 ///
@@ -28,12 +37,19 @@ extension PumpApp on WidgetTester {
     PreloadCubit? preloadCubit,
     AudioCubit? audioCubit,
     GameRecords? records,
+    GameSettings? settings,
   }) async {
     final gameRecords = records ?? await createTestRecords();
+    // Reuses whatever preferences the records store already set up.
+    final gameSettings =
+        settings ?? GameSettings(await SharedPreferences.getInstance());
 
     return pumpWidget(
-      RepositoryProvider<GameRecords>.value(
-        value: gameRecords,
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<GameRecords>.value(value: gameRecords),
+          RepositoryProvider<GameSettings>.value(value: gameSettings),
+        ],
         child: MultiBlocProvider(
           providers: [
             BlocProvider.value(value: preloadCubit ?? MockPreloadCubit()),
