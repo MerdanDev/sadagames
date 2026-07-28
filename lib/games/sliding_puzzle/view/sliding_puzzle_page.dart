@@ -68,54 +68,65 @@ class _SlidingPuzzleViewState extends State<SlidingPuzzleView> {
 
   @override
   Widget build(BuildContext context) {
+    // StackFit.expand keeps the canvas full screen: the HUD is positioned, so
+    // it cannot size the stack, and a loose stack would collapse onto it.
     return Stack(
+      fit: StackFit.expand,
       children: [
-        Positioned.fill(
-          child: GameWidget(
-            game: _game,
-            overlayBuilderMap: {
-              SlidingPuzzleGame.solvedOverlayId: (_, SlidingPuzzleGame game) =>
-                  _SolvedOverlay(game: game),
-            },
-          ),
+        GameWidget(
+          game: _game,
+          overlayBuilderMap: {
+            SlidingPuzzleGame.solvedOverlayId: (_, SlidingPuzzleGame game) =>
+                _SolvedOverlay(game: game),
+          },
         ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                _CounterLabel(
-                  icon: Icons.swap_horiz_rounded,
-                  value: _game.movesNotifier,
-                ),
-                const SizedBox(width: 16),
-                _CounterLabel(
-                  icon: Icons.timer_outlined,
-                  value: _game.secondsNotifier,
-                  suffix: 's',
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-                  onPressed: _game.restart,
-                ),
-                BlocBuilder<AudioCubit, AudioState>(
-                  builder: (context, state) {
-                    return IconButton(
-                      icon: Icon(
-                        state.volume == 0 ? Icons.volume_off : Icons.volume_up,
-                        color: Colors.white,
-                      ),
-                      onPressed: () =>
-                          context.read<AudioCubit>().toggleVolume(),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  _CounterLabel(
+                    icon: Icons.swap_horiz_rounded,
+                    value: _game.movesNotifier,
+                  ),
+                  const SizedBox(width: 16),
+                  _CounterLabel(
+                    icon: Icons.timer_outlined,
+                    value: _game.secondsNotifier,
+                    suffix: 's',
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                      color: Colors.white,
+                    ),
+                    onPressed: _game.restart,
+                  ),
+                  BlocBuilder<AudioCubit, AudioState>(
+                    builder: (context, state) {
+                      return IconButton(
+                        icon: Icon(
+                          state.volume == 0
+                              ? Icons.volume_off
+                              : Icons.volume_up,
+                          color: Colors.white,
+                        ),
+                        onPressed: () =>
+                            context.read<AudioCubit>().toggleVolume(),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

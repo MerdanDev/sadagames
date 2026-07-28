@@ -66,42 +66,50 @@ class _StarCatcherViewState extends State<StarCatcherView> {
 
   @override
   Widget build(BuildContext context) {
+    // StackFit.expand keeps the canvas full screen: the HUD is positioned, so
+    // it cannot size the stack, and a loose stack would collapse onto it.
     return Stack(
+      fit: StackFit.expand,
       children: [
-        Positioned.fill(
-          child: GameWidget(
-            game: _game,
-            overlayBuilderMap: {
-              StarCatcherGame.gameOverOverlayId: (_, StarCatcherGame game) =>
-                  _GameOverOverlay(game: game),
-            },
-          ),
+        GameWidget(
+          game: _game,
+          overlayBuilderMap: {
+            StarCatcherGame.gameOverOverlayId: (_, StarCatcherGame game) =>
+                _GameOverOverlay(game: game),
+          },
         ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                _ScoreLabel(score: _game.scoreNotifier),
-                const Spacer(),
-                _LivesIndicator(lives: _game.livesNotifier),
-                BlocBuilder<AudioCubit, AudioState>(
-                  builder: (context, state) {
-                    return IconButton(
-                      icon: Icon(
-                        state.volume == 0 ? Icons.volume_off : Icons.volume_up,
-                        color: Colors.white,
-                      ),
-                      onPressed: () =>
-                          context.read<AudioCubit>().toggleVolume(),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  _ScoreLabel(score: _game.scoreNotifier),
+                  const Spacer(),
+                  _LivesIndicator(lives: _game.livesNotifier),
+                  BlocBuilder<AudioCubit, AudioState>(
+                    builder: (context, state) {
+                      return IconButton(
+                        icon: Icon(
+                          state.volume == 0
+                              ? Icons.volume_off
+                              : Icons.volume_up,
+                          color: Colors.white,
+                        ),
+                        onPressed: () =>
+                            context.read<AudioCubit>().toggleVolume(),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
