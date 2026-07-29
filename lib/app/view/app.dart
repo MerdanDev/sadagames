@@ -1,17 +1,22 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/l10n/l10n.dart';
 import 'package:sadagames/loading/loading.dart';
 import 'package:sadagames/records/records.dart';
 import 'package:sadagames/settings/settings.dart';
 
 class App extends StatelessWidget {
-  const App({required this.records, required this.settings, super.key});
+  const App({
+    required this.records,
+    required this.settings,
+    required this.sounds,
+    super.key,
+  });
 
   /// Personal bests, loaded before the app starts.
   final GameRecords records;
@@ -19,21 +24,22 @@ class App extends StatelessWidget {
   /// Player preferences, loaded before the app starts.
   final GameSettings settings;
 
+  /// The sound engine, shared by every game.
+  final GameSounds sounds;
+
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider.value(value: records),
         RepositoryProvider.value(value: settings),
+        RepositoryProvider.value(value: sounds),
       ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider(
             create: (_) {
-              final cubit = PreloadCubit(
-                Images(prefix: ''),
-                AudioCache(prefix: ''),
-              );
+              final cubit = PreloadCubit(Images(prefix: ''));
               unawaited(cubit.loadSequentially());
               return cubit;
             },

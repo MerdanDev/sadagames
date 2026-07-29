@@ -1,56 +1,202 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
-import 'package:sadagames/gen/assets.gen.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 
-/// Plays the shared effect clip as short, pitched sounds.
+/// The cues a game can ask for.
 ///
-/// There is only one effect asset and it runs for three seconds, which is far
-/// longer than any single game event. Left alone it drones on and each new
-/// event restarts it mid-flow, so nothing lines up with what the player just
-/// did. This class cuts it down to a blip per event and pitches it, so a catch,
-/// a mistake and a win are told apart by ear.
-class GameSounds {
-  GameSounds(this._player);
+/// Games talk in terms of what happened, not what it should sound like, so the
+/// whole collection can be retuned in one place.
+abstract class GameSounds {
+  /// Plays a musical note. [degree] walks up a scale and wraps into higher
+  /// octaves, so a rising streak keeps climbing without ever going sour.
+  void note(int degree);
 
-  static const _blipLength = Duration(milliseconds: 220);
-  static const _thudLength = Duration(milliseconds: 420);
-  static const _fanfareLength = Duration(milliseconds: 1100);
+  /// A short, neutral click for an ordinary action: a piece placed, a tile
+  /// slid, a tap that neither wins nor loses anything.
+  void tap();
 
-  final AudioPlayer _player;
+  /// A low, blunt sound for a mistake, a lost life or the end of a run.
+  void fail();
 
-  Future<void>? _sourceReady;
-  Timer? _stopTimer;
+  /// A rising flourish for something worth celebrating.
+  void win();
 
-  /// A short, bright sound for a hit, a press or a step forward.
+  /// Silences or restores everything.
+  void setMuted({required bool isMuted});
+
+  /// Releases the engine. Call when the app is done with audio.
+  Future<void> dispose();
+}
+
+/// Synthesises every cue with SoLoud, so the collection ships no audio files.
+///
+/// Notes come from a pentatonic scale: any two of them sound consonant
+/// together, which is what lets a game hand out notes in whatever order the
+/// player happens to produce and still have it sound like music.
+class SoLoudGameSounds implements GameSounds {
+  SoLoudGameSounds();
+
+  /// Semitone offsets of a minor pentatonic scale, from the root.
+  static const _scale = [0, 3, 5, 7, 10];
+
+  /// Root of the scale, in hertz. A3.
+  static const _root = 220.0;
+
+  static const _noteLength = Duration(milliseconds: 260);
+  static const _tapLength = Duration(milliseconds: 90);
+  static const _failLength = Duration(milliseconds: 420);
+
+  /// One source per note, because SoLoud holds the frequency on the source:
+  /// sharing one would make overlapping notes steal each other's pitch.
+  final List<AudioSource> _notes = [];
+
+  AudioSource? _tap;
+  AudioSource? _fail;
+
+  bool _isReady = false;
+  bool _isMuted = false;
+
+  /// Whether the engine came up. Everything is a no-op until it does.
+  bool get isReady => _isReady;
+
+  /// Brings the engine up and builds every voice.
   ///
-  /// [pitch] rises with the player's streak, so progress is audible.
-  Future<void> blip({double pitch = 1}) =>
-      _play(pitch: pitch, length: _blipLength);
+  /// Audio is never worth crashing a game over, so a failure here leaves the
+  /// app silent rather than broken.
+  Future<void> init() async {
+    try {
+      if (!SoLoud.instance.isInitialized) {
+        await SoLoud.instance.init();
+      }
 
-  /// A low, blunt sound for a mistake or a lost life.
-  Future<void> thud() => _play(pitch: 0.55, length: _thudLength);
+      // Two octaves of the scale is enough range for the longest streak.
+      for (var octave = 0; octave < 2; octave++) {
+        for (final semitones in _scale) {
+          final source = await SoLoud.instance.loadWaveform(
+            WaveForm.sin,
+            true,
+            0.4,
+            1,
+          );
+          SoLoud.instance.setWaveformFreq(
+            source,
+            _frequencyFor(semitones + octave * 12),
+          );
+          _notes.add(source);
+        }
+      }
 
-  /// A longer, warmer sound for finishing a run well.
-  Future<void> fanfare() => _play(pitch: 0.9, length: _fanfareLength);
+      _tap = await SoLoud.instance.loadWaveform(WaveForm.triangle, false, 0, 0);
+      SoLoud.instance.setWaveformFreq(_tap!, _frequencyFor(24));
 
-  Future<void> _play({required double pitch, required Duration length}) async {
-    _stopTimer?.cancel();
+      _fail = await SoLoud.instance.loadWaveform(WaveForm.saw, false, 0, 0);
+      SoLoud.instance.setWaveformFreq(_fail!, _frequencyFor(-12));
 
-    // The source only has to be handed over once; after that rewinding is
-    // enough and keeps the sound responsive.
-    _sourceReady ??= _player.setSource(AssetSource(Assets.audio.effect));
-    await _sourceReady;
-
-    await _player.seek(Duration.zero);
-    await _player.resume();
-    // The rate has to be set while the clip is playing; setting it beforehand
-    // is dropped when playback starts, which is why pitches used to be lost.
-    await _player.setPlaybackRate(pitch);
-
-    _stopTimer = Timer(length, () => unawaited(_player.stop()));
+      _isReady = true;
+      setMuted(isMuted: _isMuted);
+    } on Object catch (error, stackTrace) {
+      _isReady = false;
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'sadagames audio',
+          context: ErrorDescription('bringing the sound engine up'),
+        ),
+      );
+    }
   }
 
-  /// Cancels any pending stop. Call when the game is torn down.
-  void dispose() => _stopTimer?.cancel();
+  static double _frequencyFor(int semitones) =>
+      _root * _semitoneRatio(semitones);
+
+  /// Equal temperament: every semitone is the twelfth root of two apart.
+  static double _semitoneRatio(int semitones) {
+    var ratio = 1.0;
+    final step = semitones.isNegative
+        ? 1 / 1.0594630943592953
+        : 1.0594630943592953;
+    for (var i = 0; i < semitones.abs(); i++) {
+      ratio *= step;
+    }
+    return ratio;
+  }
+
+  /// Plays [source] and fades it out, which is the whole envelope: an
+  /// oscillator runs forever otherwise.
+  void _pluck(AudioSource? source, Duration length, {double volume = 0.5}) {
+    if (!_isReady || source == null) return;
+    try {
+      final handle = SoLoud.instance.play(source, volume: volume);
+      SoLoud.instance
+        ..fadeVolume(handle, 0, length)
+        ..scheduleStop(handle, length);
+    } on Object {
+      // A dropped cue is not worth interrupting play for.
+    }
+  }
+
+  @override
+  void note(int degree) {
+    if (_notes.isEmpty) return;
+    _pluck(_notes[degree.abs() % _notes.length], _noteLength, volume: 0.45);
+  }
+
+  @override
+  void tap() => _pluck(_tap, _tapLength, volume: 0.3);
+
+  @override
+  void fail() => _pluck(_fail, _failLength, volume: 0.35);
+
+  @override
+  void win() {
+    // A three note arpeggio up the scale, spaced so it reads as a flourish.
+    for (var i = 0; i < 3; i++) {
+      Timer(Duration(milliseconds: i * 70), () => note(i * 2));
+    }
+  }
+
+  @override
+  void setMuted({required bool isMuted}) {
+    _isMuted = isMuted;
+    if (!_isReady) return;
+    SoLoud.instance.setGlobalVolume(isMuted ? 0 : 1);
+  }
+
+  @override
+  Future<void> dispose() async {
+    if (!_isReady) return;
+    _isReady = false;
+    await SoLoud.instance.disposeAllSources();
+    SoLoud.instance.deinit();
+  }
+}
+
+/// Sounds that make no sound, and remember what they were asked to play.
+///
+/// Used by tests, and as the fallback when the engine cannot start.
+class SilentGameSounds implements GameSounds {
+  /// Cues asked for, in order, as `note:3`, `tap`, `fail` or `win`.
+  final List<String> played = [];
+
+  bool isMuted = false;
+
+  @override
+  void note(int degree) => played.add('note:$degree');
+
+  @override
+  void tap() => played.add('tap');
+
+  @override
+  void fail() => played.add('fail');
+
+  @override
+  void win() => played.add('win');
+
+  @override
+  void setMuted({required bool isMuted}) => this.isMuted = isMuted;
+
+  @override
+  Future<void> dispose() async {}
 }

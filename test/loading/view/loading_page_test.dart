@@ -4,41 +4,25 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/cache.dart';
 import 'package:flutter/widgets.dart' hide Image;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockingjay/mockingjay.dart';
-import 'package:sadagames/gen/assets.gen.dart';
 import 'package:sadagames/loading/loading.dart';
 
 import '../../helpers/helpers.dart';
 
 class _MockImages extends Mock implements Images {}
 
-class _MockAudioCache extends Mock implements AudioCache {}
-
 void main() {
   group('LoadingPage', () {
     late PreloadCubit preloadCubit;
     late _MockImages images;
-    late _MockAudioCache audio;
 
     setUp(() {
-      preloadCubit = PreloadCubit(
-        images = _MockImages(),
-        audio = _MockAudioCache(),
-      );
+      preloadCubit = PreloadCubit(images = _MockImages());
 
       when(() => images.loadAll(any())).thenAnswer((_) async => <Image>[]);
-
-      when(
-        () => audio.loadAll([Assets.audio.effect]),
-      ).thenAnswer(
-        (_) async => [
-          Uri.parse(Assets.audio.effect),
-        ],
-      );
     });
 
     testWidgets('basic layout', (tester) async {
@@ -63,7 +47,7 @@ void main() {
 
       await tester.pump();
 
-      expect(textWidgetFinder().data, 'Loading Delightful music...');
+      expect(textWidgetFinder().data, 'Loading Beautiful scenery...');
       await tester.pump(const Duration(milliseconds: 200));
 
       expect(textWidgetFinder().data, 'Loading Beautiful scenery...');

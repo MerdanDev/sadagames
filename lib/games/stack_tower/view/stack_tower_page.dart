@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/game.dart' hide Route;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/games/stack_tower/stack_tower.dart';
-import 'package:sadagames/loading/cubit/cubit.dart';
 import 'package:sadagames/records/records.dart';
 import 'package:sadagames/settings/settings.dart';
 
@@ -20,13 +18,10 @@ class StackTowerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) {
-        final audioCache = context.read<PreloadCubit>().audio;
-        return AudioCubit(
-          audioPlayer: AudioPlayer()..audioCache = audioCache,
-          settings: context.read<GameSettings>(),
-        );
-      },
+      create: (context) => AudioCubit(
+        sounds: context.read<GameSounds>(),
+        settings: context.read<GameSettings>(),
+      ),
       // No SafeArea here on purpose: the tower fills the screen edge to edge
       // and only the HUD is inset.
       child: const Scaffold(body: StackTowerView()),
@@ -52,7 +47,7 @@ class _StackTowerViewState extends State<StackTowerView> {
     _game =
         widget.game ??
         StackTowerGame(
-          sounds: GameSounds(context.read<AudioCubit>().effectPlayer),
+          sounds: context.read<GameSounds>(),
           records: context.read<GameRecords>(),
         );
   }

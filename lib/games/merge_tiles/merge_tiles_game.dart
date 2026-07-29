@@ -243,9 +243,10 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
     _snapshotScore = beforeScore;
     if (gained > 0) {
       scoreNotifier.value = score + gained;
-      unawaited(sounds.blip(pitch: min(1 + gained / 300, 1.6)));
+      // Bigger merges land higher up the scale.
+      sounds.note(gained ~/ 4);
     } else {
-      unawaited(sounds.blip(pitch: 0.9));
+      sounds.tap();
     }
 
     unawaited(_finishMove(gained));
@@ -310,7 +311,7 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
     _snapshotValues = null;
     isGameOver = false;
     overlays.remove(gameOverOverlayId);
-    unawaited(sounds.blip(pitch: 1.4));
+    sounds.note(3);
     unawaited(_rebuild(snapshot));
     return true;
   }
@@ -338,7 +339,7 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
   void _checkForGameOver() {
     if (isGameOver || hasAnyMove) return;
     isGameOver = true;
-    unawaited(sounds.thud());
+    sounds.fail();
     // Decide and show straight away; the write itself can settle in the
     // background rather than holding up the overlay.
     isNewRecord = records.beatsRecord(
@@ -423,7 +424,6 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
     highestNotifier.dispose();
     undosNotifier.dispose();
     bestScoreNotifier.dispose();
-    sounds.dispose();
     super.onRemove();
   }
 }

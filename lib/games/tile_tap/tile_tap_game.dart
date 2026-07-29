@@ -33,9 +33,6 @@ class TileTapGame extends FlameGame with TapCallbacks {
   /// Skips the player may hold at once.
   static const maxSkips = 2;
 
-  /// Playback rate per column, so each one has its own note.
-  static const columnRates = [0.75, 0.95, 1.2, 1.5];
-
   static const _baseSpeed = 260.0;
   static const _maxSpeed = 720.0;
   static const _rowsOnScreen = 4;
@@ -174,7 +171,7 @@ class TileTapGame extends FlameGame with TapCallbacks {
     final target = targetRow;
     if (target == null) return false;
 
-    unawaited(sounds.blip(pitch: columnRates[column]));
+    sounds.note(column);
 
     if (target.column != column) {
       _mistake();
@@ -196,7 +193,7 @@ class TileTapGame extends FlameGame with TapCallbacks {
     if (skips > 0) {
       // Spend a skip instead of ending the run.
       skipsNotifier.value = skips - 1;
-      unawaited(sounds.fanfare());
+      sounds.win();
       return;
     }
     _endGame();
@@ -204,7 +201,7 @@ class TileTapGame extends FlameGame with TapCallbacks {
 
   void _endGame() {
     isGameOver = true;
-    unawaited(sounds.thud());
+    sounds.fail();
     // Decide and show straight away; the write itself can settle in the
     // background rather than holding up the overlay.
     isNewRecord = records.beatsRecord(
@@ -252,7 +249,6 @@ class TileTapGame extends FlameGame with TapCallbacks {
     tilesNotifier.dispose();
     skipsNotifier.dispose();
     bestTilesNotifier.dispose();
-    sounds.dispose();
     super.onRemove();
   }
 }

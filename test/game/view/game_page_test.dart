@@ -5,7 +5,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flame/cache.dart';
 import 'package:flutter/material.dart';
@@ -18,13 +17,9 @@ import 'package:sadagames/loading/cubit/cubit.dart';
 
 import '../../helpers/helpers.dart';
 
-class _FakeAssetSource extends Fake implements AssetSource {}
-
 class _FakeImage extends Fake implements ui.Image {}
 
 class _MockAudioCubit extends MockCubit<AudioState> implements AudioCubit {}
-
-class _MockAudioPlayer extends Mock implements AudioPlayer {}
 
 class _MockImages extends Mock implements Images {}
 
@@ -58,16 +53,13 @@ void main() {
     late PreloadCubit preloadCubit;
     late Images images;
 
-    setUpAll(() {
-      registerFallbackValue(_FakeAssetSource());
-    });
+    setUpAll(() {});
 
     setUp(() {
       images = _MockImages();
       when(() => images.fromCache(any())).thenReturn(_FakeImage());
 
       preloadCubit = _MockPreloadCubit();
-      when(() => preloadCubit.audio).thenReturn(AudioCache(prefix: ''));
       when(() => preloadCubit.images).thenReturn(images);
     });
 
@@ -106,8 +98,7 @@ void main() {
       audioCubit = _MockAudioCubit();
       when(() => audioCubit.state).thenReturn(AudioState());
 
-      final effectPlayer = _MockAudioPlayer();
-      when(() => audioCubit.effectPlayer).thenReturn(effectPlayer);
+      when(() => audioCubit.sounds).thenReturn(createTestSounds());
     });
 
     testWidgets('toggles mute button correctly', (tester) async {

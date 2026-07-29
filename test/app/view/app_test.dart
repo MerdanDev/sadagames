@@ -10,6 +10,7 @@ void main() {
         App(
           records: await createTestRecords(),
           settings: await createTestSettings(),
+          sounds: createTestSounds(),
         ),
       );
 

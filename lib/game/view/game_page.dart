@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/game.dart' hide Route;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,13 +17,10 @@ class GamePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) {
-        final audioCache = context.read<PreloadCubit>().audio;
-        return AudioCubit(
-          audioPlayer: AudioPlayer()..audioCache = audioCache,
-          settings: context.read<GameSettings>(),
-        );
-      },
+      create: (context) => AudioCubit(
+        sounds: context.read<GameSounds>(),
+        settings: context.read<GameSettings>(),
+      ),
       // No SafeArea here on purpose: the game fills the screen edge to edge and
       // only the controls are inset.
       child: const Scaffold(body: GameView()),
@@ -59,7 +55,7 @@ class _GameViewState extends State<GameView> {
         widget.game ??
         Sadagames(
           l10n: context.l10n,
-          sounds: GameSounds(context.read<AudioCubit>().effectPlayer),
+          sounds: context.read<GameSounds>(),
           textStyle: textStyle,
           images: context.read<PreloadCubit>().images,
         );

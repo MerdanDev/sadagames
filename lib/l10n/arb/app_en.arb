@@ -19,7 +19,7 @@
             }
         }
     },
-    "loadingPhaseLabel": "{loadingPhase, select, audio{Delightful music} images{Beautiful scenery} other{ }}",
+    "loadingPhaseLabel": "{loadingPhase, select, images{Beautiful scenery} other{ }}",
     "@loadingPhaseLabel": {
         "description": "Loading phases",
         "placeholders": {

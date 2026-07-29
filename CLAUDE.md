@@ -24,6 +24,7 @@ Every command must run through `fvm` — see Gotchas.
 - `lib/games/game_catalog.dart` — the list that drives the menu
 - `lib/menu/` — the game list screen
 - `lib/records/` — personal bests (shared_preferences) plus the shared record widget
+- `lib/audio/` — the synthesised sound engine, shared app wide
 - `lib/game/` — the template's original unicorn demo, kept as a catalog entry
 - `lib/loading/`, `lib/title/` — preload and splash flow that runs before the menu
 - `lib/gen/`, `lib/l10n/gen/` — generated; never edit by hand
@@ -38,7 +39,8 @@ chrome). The game exposes `ValueNotifier`s for score-like values and the page re
 the HUD; the game never builds widgets. End-of-run panels are Flame overlays registered in the
 page's `overlayBuilderMap`. Audio comes from `AudioCubit`, created per game page.
 
-`GameRecords` is loaded once before `runApp` and shared through a `RepositoryProvider`. Reads
+`GameRecords`, `GameSettings` and `GameSounds` are all built once before `runApp` and shared
+through `RepositoryProvider`. `GameRecords` in particular: Reads
 are synchronous, so a game decides whether a run was a record *before* showing its overlay and
 lets the write settle in the background — never block the end-of-run panel on I/O.
 
@@ -57,10 +59,12 @@ lets the write settle in the background — never block the end-of-run panel on 
   `.fvmrc` pins stable; other repos in `~/development` intentionally stay on the system SDK.
 - `overlays.add` asserts the overlay builder is registered, which only `GameWidget` does at
   runtime. Tests must call `overlays.addEntry(...)` when building the game.
-- Only two audio assets exist, and `effect.mp3` runs for **three seconds** — far longer than any
-  game event. Always play sounds through `GameSounds` (`lib/audio/`), which trims the clip to a
-  blip and pitches it. Two traps it exists to avoid: playing the raw clip drones over itself,
-  and `setPlaybackRate` is silently dropped unless it is called *after* playback starts.
+- **There are no audio files.** Every cue is synthesised by `flutter_soloud` in `lib/audio/`.
+  Games ask for what happened — `note`, `tap`, `fail`, `win` — never for a sound, so the whole
+  collection can be retuned in one place. Notes come from a pentatonic scale, which is what
+  keeps any order the player produces consonant. SoLoud holds frequency on the *source*, so
+  each note owns an oscillator; sharing one would make overlapping notes steal each other's
+  pitch. There is no background music, by choice.
 - Game pages deliberately have **no** `SafeArea` around `GameWidget` — the canvas is
   edge-to-edge and only the HUD row is inset. Don't "fix" this by wrapping the whole page.
   Content drawn *inside* Flame gets no such inset, so anything pinned to an edge has to be

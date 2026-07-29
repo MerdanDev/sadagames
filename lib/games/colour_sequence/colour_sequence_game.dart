@@ -43,9 +43,6 @@ class ColourSequenceGame extends FlameGame {
   /// Pads on the board.
   static const padCount = 4;
 
-  /// Playback rate per pad, so each one has its own note.
-  static const padRates = [0.7, 0.95, 1.2, 1.5];
-
   static const _padColours = [
     Color(0xFFE63946),
     Color(0xFF06D6A0),
@@ -180,7 +177,7 @@ class ColourSequenceGame extends FlameGame {
 
     final padIndex = sequence[_playbackIndex];
     _pads[padIndex].litSeconds = flashSeconds;
-    unawaited(sounds.blip(pitch: padRates[padIndex]));
+    sounds.note(padIndex);
     _playbackIndex++;
     _timer = flashSeconds + _gapSeconds;
   }
@@ -190,7 +187,7 @@ class ColourSequenceGame extends FlameGame {
     if (status != SequenceStatus.awaitingInput) return;
 
     _pads[index].litSeconds = _pressSeconds;
-    unawaited(sounds.blip(pitch: padRates[index]));
+    sounds.note(index);
 
     if (sequence[_inputIndex] != index) {
       _onMistake();
@@ -206,7 +203,7 @@ class ColourSequenceGame extends FlameGame {
 
   void _onMistake() {
     livesNotifier.value = lives - 1;
-    unawaited(sounds.thud());
+    sounds.fail();
 
     if (lives <= 0) {
       _endGame();
@@ -254,7 +251,6 @@ class ColourSequenceGame extends FlameGame {
     livesNotifier.dispose();
     statusNotifier.dispose();
     bestRoundsNotifier.dispose();
-    sounds.dispose();
     super.onRemove();
   }
 }

@@ -1,22 +1,17 @@
-// Make test files more explicit rather then collapsing calls
-// ignore_for_file: cascade_invocations
-
 import 'dart:ui';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/cache.dart';
 import 'package:flame/game.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/entities/unicorn/behaviors/behaviors.dart';
 import 'package:sadagames/game/game.dart';
 import 'package:sadagames/l10n/l10n.dart';
 
 import '../../../../helpers/helpers.dart';
-
-class _FakeAssetSource extends Fake implements AssetSource {}
 
 class _MockImages extends Mock implements Images {}
 
@@ -40,26 +35,24 @@ void main() {
   group('TappingBehavior', () {
     late AppLocalizations l10n;
     late Images images;
-    late MockAudioPlayer audioPlayer;
+    late SilentGameSounds sounds;
 
     Sadagames createFlameGame() {
       return _Sadagames(
         l10n: l10n,
-        sounds: createTestSounds(audioPlayer),
+        sounds: sounds,
         textStyle: const TextStyle(),
         images: images,
       );
     }
 
-    setUpAll(() async {
-      registerFallbackValue(_FakeAssetSource());
-    });
+    setUpAll(() async {});
 
     setUp(() async {
       l10n = _MockAppLocalizations();
       when(() => l10n.counterText(any())).thenReturn('counterText');
 
-      audioPlayer = MockAudioPlayer();
+      sounds = createTestSounds();
 
       images = _MockImages();
       final image = await _fakeImage();
@@ -82,18 +75,15 @@ void main() {
         /// Flush long press gesture timer
         game.pauseEngine();
         await tester.pumpAndSettle();
-        game.resumeEngine();
-
-        game.update(0.1);
+        game
+          ..resumeEngine()
+          ..update(0.1);
 
         final unicorn = game.firstChild<Unicorn>()!;
         expect(unicorn.animationTicker.currentIndex, equals(1));
         expect(unicorn.isAnimationPlaying(), equals(true));
 
-        verify(audioPlayer.resume).called(1);
-
-        // Let the sound's stop timer fire so it does not outlive the test.
-        await tester.pump(const Duration(milliseconds: 300));
+        expect(sounds.played, contains('tap'));
       },
     );
   });
@@ -101,8 +91,7 @@ void main() {
 
 Future<Image> _fakeImage() async {
   final recorder = PictureRecorder();
-  final canvas = Canvas(recorder);
-  canvas.drawRect(
+  Canvas(recorder).drawRect(
     const Rect.fromLTWH(0, 0, 1, 1),
     Paint()..color = const Color(0xFF000000),
   );

@@ -1,8 +1,6 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:sadagames/games/colour_sequence/colour_sequence.dart';
 import 'package:sadagames/records/records.dart';
 
@@ -37,10 +35,6 @@ int _wrongPad(ColourSequenceGame game) =>
 void main() {
   late GameRecords records;
   late GameRecords recordsWithBest;
-
-  setUpAll(() {
-    registerFallbackValue(AssetSource('effect.mp3'));
-  });
 
   setUp(() async {
     records = await createTestRecords();

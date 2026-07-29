@@ -161,14 +161,14 @@ class OddOneOutGame extends FlameGame {
     if ((level - 1) % levelsPerExtraLife == 0 && lives < maxLives) {
       livesNotifier.value = lives + 1;
     }
-    unawaited(sounds.blip(pitch: min(1 + level * 0.02, 1.6)));
+    sounds.note(level);
     _restartTimer();
     unawaited(_buildBoard());
   }
 
   void _loseLife() {
     livesNotifier.value = lives - 1;
-    unawaited(sounds.thud());
+    sounds.fail();
 
     if (lives <= 0) {
       _endGame();
@@ -221,7 +221,6 @@ class OddOneOutGame extends FlameGame {
     livesNotifier.dispose();
     timeLeftNotifier.dispose();
     bestLevelNotifier.dispose();
-    sounds.dispose();
     super.onRemove();
   }
 }

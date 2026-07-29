@@ -165,7 +165,7 @@ class SlidingPuzzleGame extends FlameGame {
     if (_checkSolved()) {
       _onSolved();
     } else {
-      unawaited(sounds.blip(pitch: 1.2));
+      sounds.tap();
     }
     return true;
   }
@@ -186,7 +186,7 @@ class SlidingPuzzleGame extends FlameGame {
   void _onSolved() {
     isSolved = true;
     _isRunning = false;
-    unawaited(sounds.fanfare());
+    sounds.win();
     // Decide and show straight away; the write itself can settle in the
     // background rather than holding up the overlay.
     isNewRecord = records.beatsRecord(
@@ -236,7 +236,6 @@ class SlidingPuzzleGame extends FlameGame {
     movesNotifier.dispose();
     secondsNotifier.dispose();
     bestMovesNotifier.dispose();
-    sounds.dispose();
     super.onRemove();
   }
 }

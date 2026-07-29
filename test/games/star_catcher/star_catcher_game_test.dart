@@ -1,11 +1,9 @@
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flame/components.dart';
 import 'package:flame_test/flame_test.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:sadagames/games/star_catcher/star_catcher.dart';
 import 'package:sadagames/records/records.dart';
 
@@ -49,10 +47,6 @@ Future<void> _loseAllLives(StarCatcherGame game) async {
 void main() {
   late GameRecords records;
   late GameRecords recordsWithBest;
-
-  setUpAll(() {
-    registerFallbackValue(AssetSource('effect.mp3'));
-  });
 
   setUp(() async {
     records = await createTestRecords();

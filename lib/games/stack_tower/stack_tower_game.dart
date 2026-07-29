@@ -200,7 +200,7 @@ class StackTowerGame extends FlameGame with TapCallbacks {
       ..position.x = top.left - regained / 2
       ..size.x = top.width + regained;
     perfectNotifier.value = perfectDrops + 1;
-    unawaited(sounds.fanfare());
+    sounds.win();
   }
 
   void _landTrimmed(TowerBlock block, double overlapLeft, double overlap) {
@@ -222,7 +222,7 @@ class StackTowerGame extends FlameGame with TapCallbacks {
     block
       ..position.x = overlapLeft
       ..size.x = overlap;
-    unawaited(sounds.blip(pitch: min(1 + height * 0.02, 1.6)));
+    sounds.note(height);
   }
 
   /// Slides the tower down so the next slab sits at the same height on screen.
@@ -251,7 +251,7 @@ class StackTowerGame extends FlameGame with TapCallbacks {
       block.removeFromParent();
       movingBlock = null;
     }
-    unawaited(sounds.thud());
+    sounds.fail();
 
     // Decide and show straight away; the write itself can settle in the
     // background rather than holding up the overlay.
@@ -298,7 +298,6 @@ class StackTowerGame extends FlameGame with TapCallbacks {
     heightNotifier.dispose();
     perfectNotifier.dispose();
     bestHeightNotifier.dispose();
-    sounds.dispose();
     super.onRemove();
   }
 }

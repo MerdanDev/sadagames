@@ -18,6 +18,6 @@ class TappingBehavior extends Behavior<Unicorn>
     game.counter++;
     parent.playAnimation();
 
-    await game.sounds.blip();
+    game.sounds.tap();
   }
 }

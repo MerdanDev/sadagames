@@ -148,18 +148,19 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
   void _onCaught(FallingCollectible collectible) {
     if (collectible is Heart) {
       livesNotifier.value = min(lives + 1, maxLives);
-      unawaited(sounds.fanfare());
+      sounds.win();
       return;
     }
 
     scoreNotifier.value = score + 1;
-    // Nudge the pitch up as the streak grows so catching keeps feeling better.
-    unawaited(sounds.blip(pitch: min(1 + score * 0.02, 1.6)));
+    // Walk up the scale as the streak grows, so a good run turns into a
+    // rising phrase rather than the same note over and over.
+    sounds.note(score);
   }
 
   void _onMissed() {
     livesNotifier.value = lives - 1;
-    unawaited(sounds.thud());
+    sounds.fail();
     if (lives <= 0) _endGame();
   }
 
@@ -216,7 +217,6 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
     scoreNotifier.dispose();
     livesNotifier.dispose();
     bestScoreNotifier.dispose();
-    sounds.dispose();
     super.onRemove();
   }
 }

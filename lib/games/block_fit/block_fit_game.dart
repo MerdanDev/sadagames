@@ -180,9 +180,10 @@ class BlockFitGame extends FlameGame with DragCallbacks {
         _linesCleared -= linesPerSwap;
         swapsNotifier.value = min(swaps + 1, maxSwaps);
       }
-      unawaited(sounds.blip(pitch: min(1 + cleared * 0.18, 1.6)));
+      // A bigger clear reaches further up the scale.
+      sounds.note(cleared * 2);
     } else {
-      unawaited(sounds.blip(pitch: 0.95));
+      sounds.tap();
     }
 
     return true;
@@ -267,7 +268,7 @@ class BlockFitGame extends FlameGame with DragCallbacks {
   bool swapTray() {
     if (isGameOver || swaps <= 0) return false;
     swapsNotifier.value = swaps - 1;
-    unawaited(sounds.blip(pitch: 1.35));
+    sounds.win();
     unawaited(_refillTray(force: true));
     return true;
   }
@@ -336,7 +337,7 @@ class BlockFitGame extends FlameGame with DragCallbacks {
   void _checkForGameOver() {
     if (isGameOver || hasAnyMove) return;
     isGameOver = true;
-    unawaited(sounds.thud());
+    sounds.fail();
     // Decide and show straight away; the write itself can settle in the
     // background rather than holding up the overlay.
     isNewRecord = records.beatsRecord(
@@ -444,7 +445,6 @@ class BlockFitGame extends FlameGame with DragCallbacks {
     scoreNotifier.dispose();
     swapsNotifier.dispose();
     bestScoreNotifier.dispose();
-    sounds.dispose();
     super.onRemove();
   }
 }
