@@ -17,6 +17,7 @@ Every command must run through `fvm` — see Gotchas.
 | Lint | `fvm flutter analyze` |
 | Format | `fvm dart format lib test` |
 | Regenerate l10n | `fvm flutter gen-l10n` |
+| Regenerate app icons | `fvm dart run flutter_launcher_icons` |
 
 ## Layout
 

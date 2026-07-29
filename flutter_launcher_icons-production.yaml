@@ -1,0 +1,38 @@
+# Production icons, on white.
+#
+# All three flavors are configured the same way on purpose: once any
+# flutter_launcher_icons-<flavor>.yaml exists the tool ignores the unflavored
+# config entirely, even when passed with -f, so production has to be a flavor file
+# too or it silently keeps the template icon. That is also why the iOS icon set is
+# AppIcon-production rather than plain AppIcon, and why project.pbxproj was pointed
+# at the new name.
+#
+# Regenerate every flavor at once with:
+#   fvm dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  # iOS gets a copy cropped to the artwork and scaled to 84% width. The adaptive
+  # inset below is Android-only, so without this the source margins survive and
+  # the gamepad reads small inside a rounded square. Still transparent, so
+  # background_color_ios composites the flavor colour behind it.
+  image_path_ios: "assets/icon/app_icon_ios.png"
+  min_sdk_android: 21
+
+  # iOS rejects alpha in app icons, so flatten the artwork onto white rather than
+  # letting the store tooling composite it against something unpredictable.
+  remove_alpha_ios: true
+  background_color_ios: "#FFFFFF"
+
+  # Android keeps the two layers separate so the launcher can mask the background
+  # into whatever shape the device uses — circle, squircle, rounded square. Only
+  # the foreground is the artwork.
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
+
+  # The source art sits in a wide margin and the default inset of 16 would shrink
+  # it again, but zero overflows the other way: Android only guarantees the middle
+  # ~66% of the foreground survives masking, and at zero the grips reach ~75% and
+  # get clipped on circular launchers. 8 fills the safe zone without crossing it.
+  adaptive_icon_foreground_inset: 8

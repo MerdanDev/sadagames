@@ -1,0 +1,18 @@
+# Staging icons. Same artwork as production, on an amber background — see the
+# development config for why the flavors differ by background colour.
+# Writes to android/app/src/staging/res and iOS AppIcon-staging.
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  # iOS gets a copy cropped to the artwork and scaled to 84% width. The adaptive
+  # inset below is Android-only, so without this the source margins survive and
+  # the gamepad reads small inside a rounded square. Still transparent, so
+  # background_color_ios composites the flavor colour behind it.
+  image_path_ios: "assets/icon/app_icon_ios.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  background_color_ios: "#F9A825"
+  adaptive_icon_background: "#F9A825"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
+  adaptive_icon_foreground_inset: 8
