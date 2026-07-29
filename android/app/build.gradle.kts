@@ -16,6 +16,8 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "dev.merdan.sadagames.sadagames"
     compileSdk = flutter.compileSdkVersion
+    // Overridden for this and every other module when sadagames.ndkVersion is set
+    // — see the comment in the root build.gradle.kts.
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

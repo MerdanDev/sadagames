@@ -70,6 +70,12 @@ the end-of-run panel on I/O.
   `package:meta/meta.dart` for `@immutable` / `@visibleForTesting` and write function types out
   rather than borrowing Flutter's typedefs. `avoid_public_fields` is deliberately off in
   `analysis_options.yaml`: cubits take collaborators as final fields, which is not state.
+- A damaged local NDK fails Gradle *configuration* with `[CXX1101] ... did not have a
+  source.properties file`, naming a version the SDK Manager left half-downloaded. Point
+  `sadagames.ndkVersion` (in `~/.gradle/gradle.properties`) or `SADAGAMES_NDK_VERSION` at an
+  install that has `source.properties`. Unset by default, so CI keeps its own SDK's default.
+  The override in `android/build.gradle.kts` covers *every* module, not just `:app` — plugins
+  that build native code resolve their own AGP default, so an app-level pin never reaches them.
 - CI enforces a **coverage floor of 55%** (`min_coverage` in `.github/workflows/main.yaml`,
   against a real figure of 57.2%). Ratchet it up as coverage improves; never down to pass a run.
 - Game pages deliberately have **no** `SafeArea` around `GameWidget` — the canvas is
