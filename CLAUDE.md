@@ -26,28 +26,29 @@ Every command must run through `fvm` — see Gotchas.
 - `lib/records/` — personal bests (shared_preferences) plus the shared record widget
 - `lib/audio/` — the synthesised sound engine, shared app wide
 - `lib/game/` — the template's original unicorn demo, kept as a catalog entry
-- `lib/loading/`, `lib/title/` — preload and splash flow that runs before the menu
+- `lib/loading/` — the preload screen that runs before the menu
 - `lib/gen/`, `lib/l10n/gen/` — generated; never edit by hand
 
 ## Architecture
 
-Flow is Loading → Title → Menu → a game. The menu renders whatever `GameCatalog.entries`
+Flow is Loading → Menu → a game; there is no title screen. The menu renders whatever `GameCatalog.entries`
 contains, so **adding a game is one `const` entry plus its own directory** — no menu changes.
 
 Each game is a `FlameGame` (simulation, drawing, input) paired with a page widget (Flutter
 chrome). The game exposes `ValueNotifier`s for score-like values and the page renders them as
 the HUD; the game never builds widgets. End-of-run panels are Flame overlays registered in the
-page's `overlayBuilderMap`. Audio comes from `AudioCubit`, created per game page.
+page's `overlayBuilderMap`. `AudioCubit` is created per page but owns only the mute switch.
 
-`GameRecords`, `GameSettings` and `GameSounds` are all built once before `runApp` and shared
-through `RepositoryProvider`. `GameRecords` in particular: Reads
-are synchronous, so a game decides whether a run was a record *before* showing its overlay and
-lets the write settle in the background — never block the end-of-run panel on I/O.
+`GameRecords`, `GameSettings` and `GameSounds` are built once before `runApp` and shared through
+`RepositoryProvider`. Record reads are synchronous on purpose, so a game knows whether a run was
+a record *before* showing its overlay and lets the write settle in the background — never block
+the end-of-run panel on I/O.
 
 ## Conventions
 
 - Barrel files at every level (`components/components.dart`, `<game>/<game>.dart`)
-- Game logic tests use `testWithGame` with a factory that stubs the overlay and audio player
+- Game logic tests use `testWithGame` with a factory that stubs the overlay and passes
+  `createTestSounds()`, which records cues instead of making noise
 - l10n (`lib/l10n/arb/app_en.arb`) for app chrome; game names and in-game copy are plain
   strings in the catalog and game files
 - Commit style: imperative subject, blank line, bullets explaining why
