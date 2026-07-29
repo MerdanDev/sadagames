@@ -80,10 +80,14 @@ jobs:
           ANDROID_KEYSTORE_ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD }}
+        # x86_64 is left out on purpose. It is 21MB of a 60MB universal APK and
+        # serves emulators only, so every real phone pays a third of the download
+        # for nothing. The cost is that this APK will not install on an emulator.
         run: |
           flutter build apk --release \
             --flavor production \
             --target lib/main_production.dart \
+            --target-platform android-arm,android-arm64 \
             --build-name "${{ steps.version.outputs.name }}" \
             --build-number "${GITHUB_RUN_NUMBER}"
           mv build/app/outputs/flutter-apk/app-production-release.apk \

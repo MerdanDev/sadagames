@@ -20,6 +20,24 @@ android {
     // — see the comment in the root build.gradle.kts.
     ndkVersion = flutter.ndkVersion
 
+    // x86 ABIs exist for emulators; no phone ships them, yet they were a third of
+    // the release APK. `--target-platform` only drops the Flutter engine's copies,
+    // and neither defaultConfig.ndk.abiFilters nor a release-scoped one touches the
+    // rest, because plugins that build native code — flutter_soloud — arrive as
+    // prebuilt jniLibs the Flutter Gradle plugin packages past that filter.
+    // Excluding at packaging is what actually removes them: 60.6MB -> 36.7MB.
+    //
+    // This applies to debug builds too, which costs nothing on an arm64 machine
+    // where the emulator is arm64 as well. Set sadagames.keepX86=true to keep them
+    // when you need an x86_64 emulator.
+    if (!((project.findProperty("sadagames.keepX86") as String?)?.toBoolean() ?: false)) {
+        packaging {
+            jniLibs {
+                excludes += setOf("**/x86_64/**", "**/x86/**")
+            }
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
