@@ -10,6 +10,33 @@ Simple game collection
 
 ---
 
+## About the Games 🎮
+
+Sadagames is a collection of short, self-contained mobile games behind a single menu. There is no
+title screen — the app opens on the list, you pick a game, and a run lasts a minute or two. Every
+game keeps a personal best on the device, shown on its menu tile, so the reason to play again is
+your own last score.
+
+| Game | What you do | Personal best |
+| --- | --- | --- |
+| **Block Fit** | Drop the pieces in and clear full rows and columns. | points |
+| **Merge Tiles** | Swipe to slide the tiles and merge matching numbers. | points |
+| **Stack Tower** | Tap to drop each slab. Miss and it gets cut down. | blocks |
+| **Tile Tap** | Hit the dark tile in every row before it slips past. | tiles |
+| **Star Catcher** | Drag the basket and catch the falling stars. | stars |
+| **Sliding Puzzle** | Slide the tiles back into order, fast. | moves |
+| **Odd One Out** | Spot the tile with the odd colour before time runs out. | levels |
+| **Colour Sequence** | Watch the pads flash, then play them back in order. | rounds |
+| **Unicorn Tap** | Tap the unicorn and watch the counter climb. | — |
+
+Each game is a [Flame][flame_link] `FlameGame` paired with a Flutter page that draws the HUD, and
+the menu renders whatever `GameCatalog.entries` contains — so adding a game is one entry plus its
+own directory under `lib/games/`. Everything runs offline, and there are no audio files: every
+sound is synthesised at runtime from a pentatonic scale, which is what keeps the noise a player
+makes consonant no matter what order they play in.
+
+---
+
 ## Getting Started 🚀
 
 This project contains 3 flavors:
@@ -18,20 +45,24 @@ This project contains 3 flavors:
 - staging
 - production
 
+Every command goes through [FVM][fvm_link] — the SDK version is pinned in `.fvmrc`, and a system
+Flutter is likely to be too old to build this project. Run `fvm install` once, then `fvm flutter
+pub get`.
+
 To run the desired flavor either use the launch configuration in VSCode/Android Studio or use the following commands:
 
 ```sh
 # Development
-$ flutter run --flavor development --target lib/main_development.dart
+$ fvm flutter run --flavor development --target lib/main_development.dart
 
 # Staging
-$ flutter run --flavor staging --target lib/main_staging.dart
+$ fvm flutter run --flavor staging --target lib/main_staging.dart
 
 # Production
-$ flutter run --flavor production --target lib/main_production.dart
+$ fvm flutter run --flavor production --target lib/main_production.dart
 ```
 
-_\*Sadagames works on iOS, Android, Web, and Windows._
+_\*Sadagames targets iOS and Android._
 
 ---
 
@@ -40,7 +71,7 @@ _\*Sadagames works on iOS, Android, Web, and Windows._
 To run all unit and widget tests use the following command:
 
 ```sh
-$ flutter test --coverage --test-randomize-ordering-seed random
+$ fvm flutter test --coverage --test-randomize-ordering-seed random
 ```
 
 To view the generated coverage report you can use [lcov](https://github.com/linux-test-project/lcov).
@@ -62,7 +93,7 @@ This project uses the [bloc_lint](https://pub.dev/packages/bloc_lint) package to
 To validate linter errors, run
 
 ```bash
-dart run bloc_tools:bloc lint .
+fvm dart run bloc_tools:bloc lint .
 ```
 
 You can also validate with VSCode-based IDEs using the [official bloc extension](https://marketplace.visualstudio.com/items?itemName=FelixAngelov.bloc).
@@ -171,7 +202,9 @@ Update the `CFBundleLocalizations` array in the `Info.plist` at `ios/Runner/Info
 ```
 
 [coverage_badge]: coverage_badge.svg
+[flame_link]: https://flame-engine.org
 [flutter_localizations_link]: https://api.flutter.dev/flutter/flutter_localizations/flutter_localizations-library.html
+[fvm_link]: https://fvm.app
 [internationalization_link]: https://flutter.dev/docs/development/accessibility-and-localization/internationalization
 [license_badge]: https://img.shields.io/badge/license-MIT-blue.svg
 [license_link]: https://opensource.org/licenses/MIT
