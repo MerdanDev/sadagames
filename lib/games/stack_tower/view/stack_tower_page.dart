@@ -39,17 +39,28 @@ class StackTowerView extends StatefulWidget {
 }
 
 class _StackTowerViewState extends State<StackTowerView> {
+  /// Held rather than read in dispose, where context is gone.
+  late final GameSounds _sounds;
+
   late final StackTowerGame _game;
 
   @override
   void initState() {
     super.initState();
+    _sounds = context.read<GameSounds>();
     _game =
         widget.game ??
         StackTowerGame(
-          sounds: context.read<GameSounds>(),
+          sounds: _sounds,
           records: context.read<GameRecords>(),
         );
+    _sounds.startMusic();
+  }
+
+  @override
+  void dispose() {
+    _sounds.stopMusic();
+    super.dispose();
   }
 
   @override

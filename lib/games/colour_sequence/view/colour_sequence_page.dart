@@ -40,17 +40,28 @@ class ColourSequenceView extends StatefulWidget {
 }
 
 class _ColourSequenceViewState extends State<ColourSequenceView> {
+  /// Held rather than read in dispose, where context is gone.
+  late final GameSounds _sounds;
+
   late final ColourSequenceGame _game;
 
   @override
   void initState() {
     super.initState();
+    _sounds = context.read<GameSounds>();
     _game =
         widget.game ??
         ColourSequenceGame(
-          sounds: context.read<GameSounds>(),
+          sounds: _sounds,
           records: context.read<GameRecords>(),
         );
+    _sounds.startMusic();
+  }
+
+  @override
+  void dispose() {
+    _sounds.stopMusic();
+    super.dispose();
   }
 
   @override

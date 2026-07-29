@@ -38,11 +38,22 @@ class GameView extends StatefulWidget {
 }
 
 class _GameViewState extends State<GameView> {
+  /// Held rather than read in dispose, where context is gone.
+  late final GameSounds _sounds;
+
   FlameGame? _game;
 
   @override
   void initState() {
     super.initState();
+    _sounds = context.read<GameSounds>();
+    _sounds.startMusic();
+  }
+
+  @override
+  void dispose() {
+    _sounds.stopMusic();
+    super.dispose();
   }
 
   @override
@@ -55,7 +66,7 @@ class _GameViewState extends State<GameView> {
         widget.game ??
         Sadagames(
           l10n: context.l10n,
-          sounds: context.read<GameSounds>(),
+          sounds: _sounds,
           textStyle: textStyle,
           images: context.read<PreloadCubit>().images,
         );

@@ -40,17 +40,28 @@ class OddOneOutView extends StatefulWidget {
 }
 
 class _OddOneOutViewState extends State<OddOneOutView> {
+  /// Held rather than read in dispose, where context is gone.
+  late final GameSounds _sounds;
+
   late final OddOneOutGame _game;
 
   @override
   void initState() {
     super.initState();
+    _sounds = context.read<GameSounds>();
     _game =
         widget.game ??
         OddOneOutGame(
-          sounds: context.read<GameSounds>(),
+          sounds: _sounds,
           records: context.read<GameRecords>(),
         );
+    _sounds.startMusic();
+  }
+
+  @override
+  void dispose() {
+    _sounds.stopMusic();
+    super.dispose();
   }
 
   @override

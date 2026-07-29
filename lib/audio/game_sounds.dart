@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
@@ -21,6 +22,13 @@ abstract class GameSounds {
 
   /// A rising flourish for something worth celebrating.
   void win();
+
+  /// Starts the background music, which is generated from the same voices
+  /// the cues use. Calling it twice is harmless.
+  void startMusic();
+
+  /// Stops the background music.
+  void stopMusic();
 
   /// Silences or restores everything.
   void setMuted({required bool isMuted});
@@ -47,12 +55,31 @@ class SoLoudGameSounds implements GameSounds {
   static const _tapLength = Duration(milliseconds: 90);
   static const _failLength = Duration(milliseconds: 420);
 
+  /// One step of the music loop. Slow enough to sit under the cues rather
+  /// than compete with them.
+  static const _step = Duration(milliseconds: 480);
+  static const _bassLength = Duration(milliseconds: 1400);
+  static const _padLength = Duration(milliseconds: 900);
+
+  /// Music is mixed well below the cues so it never masks a hit or a miss,
+  /// and quiet enough to sit behind a long session without wearing.
+  static const _bassVolume = 0.07;
+  static const _padVolume = 0.04;
+
   /// One source per note, because SoLoud holds the frequency on the source:
   /// sharing one would make overlapping notes steal each other's pitch.
   final List<AudioSource> _notes = [];
 
+  /// The same scale an octave down, for the music to sit on.
+  final List<AudioSource> _bass = [];
+
   AudioSource? _tap;
   AudioSource? _fail;
+
+  final Random _random = Random();
+  Timer? _music;
+  int _beat = 0;
+  int _rootDegree = 0;
 
   bool _isReady = false;
   bool _isMuted = false;
@@ -85,6 +112,17 @@ class SoLoudGameSounds implements GameSounds {
           );
           _notes.add(source);
         }
+      }
+
+      for (final semitones in _scale) {
+        final source = await SoLoud.instance.loadWaveform(
+          WaveForm.sin,
+          true,
+          0.25,
+          1,
+        );
+        SoLoud.instance.setWaveformFreq(source, _frequencyFor(semitones - 12));
+        _bass.add(source);
       }
 
       _tap = await SoLoud.instance.loadWaveform(WaveForm.triangle, false, 0, 0);
@@ -158,6 +196,39 @@ class SoLoudGameSounds implements GameSounds {
   }
 
   @override
+  void startMusic() {
+    if (!_isReady || _music != null) return;
+    _beat = 0;
+    _music = Timer.periodic(_step, (_) => _playBeat());
+  }
+
+  @override
+  void stopMusic() {
+    _music?.cancel();
+    _music = null;
+  }
+
+  /// One step of a generated loop.
+  ///
+  /// The bass lands on the downbeat and the root wanders now and then, so the
+  /// music never repeats exactly but never leaves the scale either.
+  void _playBeat() {
+    final position = _beat % 8;
+
+    if (position == 0) {
+      if (_random.nextDouble() < 0.35) {
+        _rootDegree = _random.nextInt(_scale.length);
+      }
+      _pluck(_bass[_rootDegree], _bassLength, volume: _bassVolume);
+    } else if (position == 4 || _random.nextDouble() < 0.25) {
+      final degree = _rootDegree + _random.nextInt(_scale.length);
+      _pluck(_notes[degree % _notes.length], _padLength, volume: _padVolume);
+    }
+
+    _beat++;
+  }
+
+  @override
   void setMuted({required bool isMuted}) {
     _isMuted = isMuted;
     if (!_isReady) return;
@@ -166,6 +237,7 @@ class SoLoudGameSounds implements GameSounds {
 
   @override
   Future<void> dispose() async {
+    stopMusic();
     if (!_isReady) return;
     _isReady = false;
     await SoLoud.instance.disposeAllSources();
@@ -193,6 +265,12 @@ class SilentGameSounds implements GameSounds {
 
   @override
   void win() => played.add('win');
+
+  @override
+  void startMusic() => played.add('music:start');
+
+  @override
+  void stopMusic() => played.add('music:stop');
 
   @override
   void setMuted({required bool isMuted}) => this.isMuted = isMuted;

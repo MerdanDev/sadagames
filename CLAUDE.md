@@ -82,6 +82,9 @@ the end-of-run panel on I/O.
 
 ## Deeper notes
 
+- `.claude/docs/games/` — one file per game: how it plays, how it gets harder, how a player
+  claws a run back, and which constant to reach for when it feels wrong. Read the one you are
+  touching, not the rest; `games/README.md` is the index.
 - `.claude/docs/game-engagement.md` — required checklist and patterns for building a new game.
   Read it before writing any new game.
 - `.claude/docs/game-backlog.md` — planned games in build order, plus cross-cutting work. Read
