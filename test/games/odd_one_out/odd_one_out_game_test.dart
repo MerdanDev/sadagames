@@ -274,4 +274,60 @@ void main() {
       },
     );
   });
+
+  group('rewarded continue', () {
+    testWithGame<OddOneOutGame>(
+      'gives a life back on the level the run ended',
+      buildGame,
+      (game) async {
+        await _clearLevels(game, 2);
+        final reached = game.level;
+        for (var i = 0; i < OddOneOutGame.maxLives; i++) {
+          game.chooseTile(_wrongIndex(game));
+        }
+        expect(game.isGameOver, isTrue);
+
+        game.continueRun();
+
+        expect(game.isGameOver, isFalse);
+        expect(game.lives, equals(1));
+        expect(game.level, equals(reached));
+        expect(
+          game.timeLeftNotifier.value,
+          equals(1),
+          reason: 'a bought life is worth a whole clock, not the dregs',
+        );
+      },
+    );
+
+    testWithGame<OddOneOutGame>('is sold only once a run', buildGame, (
+      game,
+    ) async {
+      for (var i = 0; i < OddOneOutGame.maxLives; i++) {
+        game.chooseTile(_wrongIndex(game));
+      }
+      game.continueRun();
+      expect(game.canContinue, isFalse);
+
+      for (var i = 0; i < OddOneOutGame.maxLives; i++) {
+        game.chooseTile(_wrongIndex(game));
+      }
+      game.continueRun();
+
+      expect(game.isGameOver, isTrue);
+    });
+
+    testWithGame<OddOneOutGame>('is on offer again next run', buildGame, (
+      game,
+    ) async {
+      for (var i = 0; i < OddOneOutGame.maxLives; i++) {
+        game.chooseTile(_wrongIndex(game));
+      }
+      game
+        ..continueRun()
+        ..restart();
+
+      expect(game.canContinue, isTrue);
+    });
+  });
 }

@@ -42,6 +42,12 @@ class BlockFitGame extends FlameGame with DragCallbacks {
   /// Swaps the player may hold at once.
   static const maxSwaps = 3;
 
+  /// Rewarded rescues a single run may buy.
+  ///
+  /// One. A board the player can keep unblocking stops being a board, and the
+  /// score it reaches stops meaning anything.
+  static const maxContinues = 1;
+
   /// Head start added per cell along a clearing line, so it sweeps.
   static const _sweepPerCell = 0.022;
 
@@ -82,6 +88,12 @@ class BlockFitGame extends FlameGame with DragCallbacks {
 
   /// Whether the run that just ended beat the previous best.
   bool isNewRecord = false;
+
+  /// Rewarded rescues spent so far this run.
+  int continuesUsed = 0;
+
+  /// Whether the board can still be bought back.
+  bool get canContinue => continuesUsed < maxContinues;
 
   /// Where the dragged piece would land, for the board to preview.
   (BlockShape, int, int)? preview;
@@ -275,20 +287,8 @@ class BlockFitGame extends FlameGame with DragCallbacks {
     // animated once.
     final clearing = <int, ClearedCell>{};
 
-    void mark(int column, int row, double delay) {
-      final index = row * gridSize + column;
-      final colour = cellAt(column, row);
-      if (colour == null || clearing.containsKey(index)) return;
-      clearing[index] = ClearedCell(
-        colour: colour,
-        delay: delay,
-        side: _cellSize,
-        position: Vector2(
-          (column + 0.5) * _cellSize,
-          (row + 0.5) * _cellSize,
-        ),
-      );
-    }
+    void mark(int column, int row, double delay) =>
+        _markCleared(clearing, column, row, delay);
 
     for (final row in fullRows) {
       for (var column = 0; column < gridSize; column++) {
@@ -315,6 +315,91 @@ class BlockFitGame extends FlameGame with DragCallbacks {
     unawaited(board.addAll(clearing.values));
 
     return fullRows.length + fullColumns.length;
+  }
+
+  /// Queues the fade-out for one cell, keyed so a crossing cell only animates
+  /// once however many lines claim it.
+  void _markCleared(
+    Map<int, ClearedCell> clearing,
+    int column,
+    int row,
+    double delay,
+  ) {
+    final index = row * gridSize + column;
+    final colour = cellAt(column, row);
+    if (colour == null || clearing.containsKey(index)) return;
+    clearing[index] = ClearedCell(
+      colour: colour,
+      delay: delay,
+      side: _cellSize,
+      position: Vector2(
+        (column + 0.5) * _cellSize,
+        (row + 0.5) * _cellSize,
+      ),
+    );
+  }
+
+  int _filledInLine({required int index, required bool isRow}) {
+    var filled = 0;
+    for (var i = 0; i < gridSize; i++) {
+      if (cellAt(isRow ? i : index, isRow ? index : i) != null) filled++;
+    }
+    return filled;
+  }
+
+  /// Empties whichever single row or column is carrying the most blocks.
+  void _clearFullestLine(Map<int, ClearedCell> clearing) {
+    var bestFilled = 0;
+    var bestIndex = 0;
+    var bestIsRow = true;
+
+    for (var index = 0; index < gridSize; index++) {
+      for (final isRow in const [true, false]) {
+        final filled = _filledInLine(index: index, isRow: isRow);
+        if (filled > bestFilled) {
+          bestFilled = filled;
+          bestIndex = index;
+          bestIsRow = isRow;
+        }
+      }
+    }
+    if (bestFilled == 0) return;
+
+    for (var i = 0; i < gridSize; i++) {
+      final column = bestIsRow ? i : bestIndex;
+      final row = bestIsRow ? bestIndex : i;
+      _markCleared(clearing, column, row, i * _sweepPerCell);
+      _setCell(column, row, null);
+    }
+  }
+
+  /// Takes the busiest lines off the board until a tray piece fits again, and
+  /// puts the run back in the player's hands.
+  ///
+  /// The obvious rescue — clear a three by three area — needs the player to
+  /// aim it, which is a whole targeting mode for a button most players press
+  /// once a run. Taking the fullest lines is the same favour without the
+  /// ceremony, and it cannot fail to unblock: an empty board fits everything.
+  ///
+  /// It scores nothing. A line the player did not earn must not move the
+  /// number they are trying to beat.
+  void clearForContinue() {
+    if (!isGameOver || !canContinue) return;
+    continuesUsed++;
+
+    final clearing = <int, ClearedCell>{};
+    // Bounded by the grid on purpose: taking every line empties the board,
+    // and an empty board fits any shape, so the loop always terminates.
+    for (var i = 0; i < gridSize * 2 && !hasAnyMove; i++) {
+      _clearFullestLine(clearing);
+    }
+    unawaited(board.addAll(clearing.values));
+
+    isGameOver = false;
+    isNewRecord = false;
+    sounds.win();
+    _save();
+    overlays.remove(gameOverOverlayId);
   }
 
   /// Replaces the whole tray, spending one earned swap.
@@ -491,6 +576,7 @@ class BlockFitGame extends FlameGame with DragCallbacks {
     _linesCleared = 0;
     isGameOver = false;
     isNewRecord = false;
+    continuesUsed = 0;
     preview = null;
     overlays.remove(gameOverOverlayId);
     unawaited(progress?.clear(recordGameId));

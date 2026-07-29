@@ -2,6 +2,7 @@ import 'package:flame/game.dart' hide Route;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sadagames/ads/ads.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/games/colour_sequence/colour_sequence.dart';
@@ -56,6 +57,10 @@ class _ColourSequenceViewState extends State<ColourSequenceView> {
           records: context.read<GameRecords>(),
         );
     _sounds.startMusic();
+    // Warmed on the way in, so the offer is already there when the run
+    // ends. Loading at game over would show the player a button that
+    // appears seconds late, after they have moved on.
+    context.read<GameAds>().loadReward();
   }
 
   @override
@@ -243,16 +248,16 @@ class _GameOverOverlay extends StatelessWidget {
                     )}',
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: game.restart,
-              child: const Text('Play again'),
+            RewardedButton(
+              label: 'Keep playing',
+              icon: Icons.favorite_rounded,
+              isOffered: game.canContinue,
+              game: game,
+              onReward: game.continueRun,
             ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Back to games',
-                style: TextStyle(color: Colors.white),
-              ),
+            GameOverActions(
+              onPlayAgain: game.restart,
+              wasNewRecord: game.isNewRecord,
             ),
           ],
         ),

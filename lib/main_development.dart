@@ -1,3 +1,4 @@
+import 'package:sadagames/ads/ads.dart';
 import 'package:sadagames/app/app.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/bootstrap.dart';
@@ -12,6 +13,8 @@ Future<void> main() async {
       settings: await GameSettings.load(),
       sounds: await _startSounds(),
       progress: await GameProgress.load(),
+      // Test units: showing yourself a live ad is invalid traffic.
+      ads: startAds(isLive: false),
     ),
   );
 }

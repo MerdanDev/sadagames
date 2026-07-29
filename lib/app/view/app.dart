@@ -4,6 +4,7 @@ import 'package:flame/cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sadagames/ads/ads.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/l10n/l10n.dart';
 import 'package:sadagames/loading/loading.dart';
@@ -17,6 +18,7 @@ class App extends StatelessWidget {
     required this.settings,
     required this.sounds,
     required this.progress,
+    required this.ads,
     super.key,
   });
 
@@ -32,6 +34,9 @@ class App extends StatelessWidget {
   /// Interrupted runs, so a long game can be picked back up.
   final GameProgress progress;
 
+  /// The ads shown around the games. Still starting up when the app builds.
+  final GameAds ads;
+
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
@@ -40,6 +45,7 @@ class App extends StatelessWidget {
         RepositoryProvider.value(value: settings),
         RepositoryProvider.value(value: sounds),
         RepositoryProvider.value(value: progress),
+        RepositoryProvider.value(value: ads),
       ],
       child: MultiBlocProvider(
         providers: [

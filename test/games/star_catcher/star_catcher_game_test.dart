@@ -316,4 +316,71 @@ void main() {
       },
     );
   });
+
+  group('rewarded continue', () {
+    testWithGame<StarCatcherGame>(
+      'gives a life back and keeps the score',
+      buildGame,
+      (game) async {
+        await game.ensureAdd(
+          Star(position: game.basket.position.clone(), speed: 0),
+        );
+        game.update(0);
+        expect(game.score, equals(1));
+
+        await _loseAllLives(game);
+        game.continueRun();
+
+        expect(game.isGameOver, isFalse);
+        expect(game.lives, equals(1));
+        expect(game.score, equals(1), reason: 'the run carries on, not over');
+        expect(
+          game.overlays.isActive(StarCatcherGame.gameOverOverlayId),
+          isFalse,
+        );
+      },
+    );
+
+    testWithGame<StarCatcherGame>(
+      'sweeps the sky so the bought life is not spent on landing',
+      buildGame,
+      (game) async {
+        await _loseAllLives(game);
+        final falling = Star(
+          position: Vector2(10, game.size.y - 1),
+          speed: 0,
+        );
+        await game.ensureAdd(falling);
+
+        game.continueRun();
+
+        expect(falling.isRemoving || falling.isRemoved, isTrue);
+      },
+    );
+
+    testWithGame<StarCatcherGame>('is sold only once a run', buildGame, (
+      game,
+    ) async {
+      await _loseAllLives(game);
+      game.continueRun();
+      expect(game.canContinue, isFalse);
+
+      await _loseAllLives(game);
+      game.continueRun();
+
+      expect(game.isGameOver, isTrue);
+    });
+
+    testWithGame<StarCatcherGame>('is on offer again next run', buildGame, (
+      game,
+    ) async {
+      await _loseAllLives(game);
+      game
+        ..continueRun()
+        ..restart();
+
+      expect(game.canContinue, isTrue);
+      expect(game.continuesUsed, isZero);
+    });
+  });
 }

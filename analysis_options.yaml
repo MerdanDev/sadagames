@@ -18,6 +18,10 @@ analyzer:
   exclude:
     - lib/gen/*
     - lib/l10n/gen/*
+    # An iOS build vendors plugin sources into build/ios/SourcePackages, and
+    # google_mobile_ads ships its own tests in there. Analysing someone else's
+    # source drowns ours; the analyzer does not skip build/ on its own.
+    - build/**
 linter:
   rules:
     public_member_api_docs: false

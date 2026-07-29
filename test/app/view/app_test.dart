@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sadagames/ads/ads.dart';
 import 'package:sadagames/app/app.dart';
 
 import '../../helpers/helpers.dart';
@@ -12,6 +13,7 @@ void main() {
           settings: await createTestSettings(),
           sounds: createTestSounds(),
           progress: await createTestProgress(),
+          ads: NoGameAds(),
         ),
       );
 

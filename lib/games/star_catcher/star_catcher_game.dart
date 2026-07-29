@@ -30,6 +30,12 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
   /// Amount of stars the player may miss before the game ends.
   static const maxLives = 3;
 
+  /// Rewarded continues a single run may buy.
+  ///
+  /// One. A run the player can keep buying back stops being a run, and the
+  /// record it sets stops meaning anything.
+  static const maxContinues = 1;
+
   /// Score from which hearts may start dropping.
   static const heartUnlockScore = 5;
 
@@ -69,6 +75,12 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
 
   /// Whether the run that just ended beat the previous best.
   bool isNewRecord = false;
+
+  /// Rewarded continues spent so far this run.
+  int continuesUsed = 0;
+
+  /// Whether the run can still be bought back.
+  bool get canContinue => continuesUsed < maxContinues;
 
   double _spawnTimer = 0;
 
@@ -186,6 +198,25 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
     overlays.add(gameOverOverlayId);
   }
 
+  /// Picks the run back up with a life restored, keeping the score.
+  ///
+  /// The sky is swept first. Resuming with a star already a hand's width from
+  /// the floor would spend the life the player just paid for before they
+  /// could touch the screen.
+  void continueRun() {
+    if (!isGameOver || !canContinue) return;
+    continuesUsed++;
+
+    for (final collectible in children.query<FallingCollectible>()) {
+      collectible.removeFromParent();
+    }
+    livesNotifier.value = 1;
+    isGameOver = false;
+    isNewRecord = false;
+    _spawnTimer = 0;
+    overlays.remove(gameOverOverlayId);
+  }
+
   /// Clears the board and starts a fresh run.
   void restart() {
     for (final collectible in children.query<FallingCollectible>()) {
@@ -195,6 +226,7 @@ class StarCatcherGame extends FlameGame with DragCallbacks, TapCallbacks {
     livesNotifier.value = maxLives;
     isGameOver = false;
     isNewRecord = false;
+    continuesUsed = 0;
     _spawnTimer = 0;
     basket.moveTo(size.x / 2, size.x);
     overlays.remove(gameOverOverlayId);

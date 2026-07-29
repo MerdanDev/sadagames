@@ -479,4 +479,66 @@ void main() {
       },
     );
   });
+
+  group('rewarded rescue', () {
+    /// Jams the board, then forces a tray refill so the game notices.
+    Future<void> jam(BlockFitGame game) async {
+      _fillBoard(game);
+      game.swapsNotifier.value = 1;
+      game.swapTray();
+      await game.ready();
+    }
+
+    testWithGame<BlockFitGame>('clears space until a piece fits', buildGame, (
+      game,
+    ) async {
+      await jam(game);
+      expect(game.isGameOver, isTrue);
+
+      game.clearForContinue();
+
+      expect(game.isGameOver, isFalse);
+      expect(game.hasAnyMove, isTrue);
+      expect(game.overlays.isActive(BlockFitGame.gameOverOverlayId), isFalse);
+    });
+
+    testWithGame<BlockFitGame>(
+      'scores nothing for the lines it gives',
+      buildGame,
+      (
+        game,
+      ) async {
+        await jam(game);
+        final score = game.score;
+
+        game.clearForContinue();
+
+        expect(game.score, equals(score));
+      },
+    );
+
+    testWithGame<BlockFitGame>('is sold only once a run', buildGame, (
+      game,
+    ) async {
+      await jam(game);
+      game.clearForContinue();
+      expect(game.canContinue, isFalse);
+
+      await jam(game);
+      game.clearForContinue();
+
+      expect(game.isGameOver, isTrue);
+    });
+
+    testWithGame<BlockFitGame>('is on offer again next run', buildGame, (
+      game,
+    ) async {
+      await jam(game);
+      game
+        ..clearForContinue()
+        ..restart();
+
+      expect(game.canContinue, isTrue);
+    });
+  });
 }
