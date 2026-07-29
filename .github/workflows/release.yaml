@@ -99,7 +99,7 @@ jobs:
         run: rm -f "${RUNNER_TEMP}/upload-keystore.jks"
 
       - name: ⬆️ Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sadagames-apk
           path: sadagames-*.apk
