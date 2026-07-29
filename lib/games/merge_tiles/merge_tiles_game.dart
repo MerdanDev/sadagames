@@ -7,6 +7,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/games/merge_tiles/components/components.dart';
+import 'package:sadagames/progress/progress.dart';
 import 'package:sadagames/records/records.dart';
 
 /// Which way a swipe pushes the board.
@@ -18,8 +19,12 @@ enum SwipeDirection { up, down, left, right }
 /// costs space the player cannot win back. One undo is held in reserve, and
 /// another is earned every time a new biggest tile appears.
 class MergeTilesGame extends FlameGame with DragCallbacks {
-  MergeTilesGame({required this.sounds, required this.records, Random? random})
-    : _random = random ?? Random();
+  MergeTilesGame({
+    required this.sounds,
+    required this.records,
+    this.progress,
+    Random? random,
+  }) : _random = random ?? Random();
 
   /// Identifier of the game over overlay rendered by the Flutter layer.
   static const gameOverOverlayId = 'mergeTilesGameOver';
@@ -45,6 +50,9 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
 
   /// Store holding the player's best score between launches.
   final GameRecords records;
+
+  /// Where an interrupted run is kept, if this run is worth saving at all.
+  final GameProgress? progress;
 
   final Random _random;
 
@@ -115,8 +123,36 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
       ..size = Vector2.all(_cellSize * gridSize)
       ..priority = -2;
     await add(grid);
+
+    if (await _resume()) return;
     await _spawnTile();
     await _spawnTile();
+  }
+
+  /// Puts back an interrupted run, if there is one.
+  Future<bool> _resume() async {
+    final snapshot = progress?.read(recordGameId);
+    if (snapshot == null) return false;
+
+    final values = (snapshot['board'] as List?)?.cast<int>();
+    if (values == null || values.length != board.length) return false;
+
+    await _rebuild(values);
+    scoreNotifier.value = (snapshot['score'] as int?) ?? 0;
+    highestNotifier.value = values.fold(0, max);
+    undosNotifier.value = (snapshot['undos'] as int?) ?? startingUndos;
+    return true;
+  }
+
+  /// Keeps the run on the device, so closing the page does not lose it.
+  void _save() {
+    unawaited(
+      progress?.save(recordGameId, {
+        'board': values,
+        'score': score,
+        'undos': undosLeft,
+      }),
+    );
   }
 
   @override
@@ -259,6 +295,7 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
     if (gained > 0 && _isNewMilestone(gained)) {
       undosNotifier.value = min(undosLeft + 1, maxUndos);
     }
+    _save();
     _checkForGameOver();
   }
 
@@ -312,7 +349,7 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
     isGameOver = false;
     overlays.remove(gameOverOverlayId);
     sounds.note(3);
-    unawaited(_rebuild(snapshot));
+    unawaited(_rebuild(snapshot).then((_) => _save()));
     return true;
   }
 
@@ -357,6 +394,9 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
         goal: RecordGoal.higher,
       ),
     );
+    // The run is over, so there is nothing left to come back to. The undo can
+    // still revive it, which saves again.
+    unawaited(progress?.clear(recordGameId));
     overlays.add(gameOverOverlayId);
   }
 
@@ -406,6 +446,7 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
     isGameOver = false;
     isNewRecord = false;
     overlays.remove(gameOverOverlayId);
+    unawaited(progress?.clear(recordGameId));
     await _spawnTile();
     await _spawnTile();
   }

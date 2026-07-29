@@ -4,6 +4,7 @@ import 'package:flame_test/flame_test.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sadagames/games/merge_tiles/merge_tiles.dart';
+import 'package:sadagames/progress/progress.dart';
 import 'package:sadagames/records/records.dart';
 
 import '../../helpers/helpers.dart';
@@ -23,11 +24,16 @@ class _FixedRandom implements Random {
 
 /// Builds the game with a stub overlay, which the `GameWidget` would otherwise
 /// register through its `overlayBuilderMap`.
-MergeTilesGame _buildGameWith(GameRecords records, {Random? random}) {
+MergeTilesGame _buildGameWith(
+  GameRecords records, {
+  Random? random,
+  GameProgress? progress,
+}) {
   return MergeTilesGame(
       sounds: createTestSounds(),
       records: records,
       random: random,
+      progress: progress,
     )
     ..overlays.addEntry(
       MergeTilesGame.gameOverOverlayId,
@@ -416,5 +422,93 @@ void main() {
       expect(game.values.where((value) => value > 0), hasLength(2));
       expect(game.isGameOver, isFalse);
     });
+  });
+
+  group('saved runs', () {
+    late GameProgress progress;
+
+    setUp(() async {
+      progress = await createTestProgress();
+    });
+
+    testWithGame<MergeTilesGame>(
+      'keep the board after a move',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        await game.setBoard(_topRow([2, 2, 0, 0]));
+        game.move(SwipeDirection.left);
+        await game.ready();
+
+        final saved = progress.read(MergeTilesGame.recordGameId);
+        expect(saved, isNotNull);
+        expect(saved!['score'], equals(4));
+      },
+    );
+
+    testWithGame<MergeTilesGame>(
+      'are forgotten once the run is over',
+      () => _buildGameWith(records, progress: progress, random: _FixedRandom()),
+      (game) async {
+        await game.setBoard([
+          2, 4, 2, 4, //
+          4, 2, 4, 2, //
+          2, 4, 2, 4, //
+          2, 2, 2, 4,
+        ]);
+        game.move(SwipeDirection.left);
+        await game.ready();
+        expect(game.isGameOver, isTrue);
+
+        expect(progress.read(MergeTilesGame.recordGameId), isNull);
+      },
+    );
+
+    testWithGame<MergeTilesGame>(
+      'start fresh when nothing was saved',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        expect(game.values.where((value) => value > 0), hasLength(2));
+      },
+    );
+  });
+
+  group('resuming a saved run', () {
+    late GameProgress progress;
+
+    setUp(() async {
+      progress = await createTestProgress();
+      // Saved before the game is built, which is how a real resume happens.
+      await progress.save(MergeTilesGame.recordGameId, {
+        'board': [8, 4, 0, 0, ...List.filled(12, 0)],
+        'score': 120,
+        'undos': 2,
+      });
+    });
+
+    testWithGame<MergeTilesGame>(
+      'puts the board back',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        expect(game.values.take(2), equals([8, 4]));
+        expect(game.values.where((value) => value > 0), hasLength(2));
+      },
+    );
+
+    testWithGame<MergeTilesGame>(
+      'puts the score and undos back',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        expect(game.score, equals(120));
+        expect(game.undosLeft, equals(2));
+      },
+    );
+
+    testWithGame<MergeTilesGame>(
+      'works out the biggest tile from the board',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        expect(game.highestTile, equals(8));
+      },
+    );
   });
 }

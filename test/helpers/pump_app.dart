@@ -6,6 +6,7 @@ import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/l10n/l10n.dart';
 import 'package:sadagames/loading/loading.dart';
+import 'package:sadagames/progress/progress.dart';
 import 'package:sadagames/records/records.dart';
 import 'package:sadagames/settings/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,12 @@ import 'helpers.dart';
 Future<GameSettings> createTestSettings({bool isMuted = false}) async {
   SharedPreferences.setMockInitialValues({'settings.muted': isMuted});
   return GameSettings(await SharedPreferences.getInstance());
+}
+
+/// Builds a progress store backed by in-memory preferences.
+Future<GameProgress> createTestProgress() async {
+  SharedPreferences.setMockInitialValues({});
+  return GameProgress(await SharedPreferences.getInstance());
 }
 
 /// Builds a records store backed by in-memory preferences.
@@ -40,6 +47,7 @@ extension PumpApp on WidgetTester {
     GameRecords? records,
     GameSettings? settings,
     GameSounds? sounds,
+    GameProgress? progress,
   }) async {
     final gameRecords = records ?? await createTestRecords();
     // Reuses whatever preferences the records store already set up.
@@ -53,6 +61,10 @@ extension PumpApp on WidgetTester {
           RepositoryProvider<GameSettings>.value(value: gameSettings),
           RepositoryProvider<GameSounds>.value(
             value: sounds ?? createTestSounds(),
+          ),
+          RepositoryProvider<GameProgress>.value(
+            value:
+                progress ?? GameProgress(await SharedPreferences.getInstance()),
           ),
         ],
         child: MultiBlocProvider(

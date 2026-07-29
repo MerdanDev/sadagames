@@ -11,6 +11,7 @@ void main() {
           records: await createTestRecords(),
           settings: await createTestSettings(),
           sounds: createTestSounds(),
+          progress: await createTestProgress(),
         ),
       );
 

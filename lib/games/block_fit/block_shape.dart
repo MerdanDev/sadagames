@@ -73,3 +73,7 @@ const bigShapes = <BlockShape>[
     colour: _purple,
   ),
 ];
+
+/// Every shape in a stable order. The index is what a saved run stores, so
+/// pieces may be appended but never reordered.
+const allShapes = <BlockShape>[...smallShapes, ...bigShapes];

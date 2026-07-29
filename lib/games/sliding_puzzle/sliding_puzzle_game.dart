@@ -6,6 +6,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/games/sliding_puzzle/components/components.dart';
+import 'package:sadagames/progress/progress.dart';
 import 'package:sadagames/records/records.dart';
 
 /// A classic sliding puzzle: put the tiles back in order in as few moves as
@@ -17,6 +18,7 @@ class SlidingPuzzleGame extends FlameGame {
   SlidingPuzzleGame({
     required this.sounds,
     required this.records,
+    this.progress,
     Random? random,
   }) : _random = random ?? Random();
 
@@ -41,6 +43,9 @@ class SlidingPuzzleGame extends FlameGame {
 
   /// Store holding the player's fewest solved moves between launches.
   final GameRecords records;
+
+  /// Where a half solved board is kept between visits.
+  final GameProgress? progress;
 
   final Random _random;
 
@@ -80,7 +85,7 @@ class SlidingPuzzleGame extends FlameGame {
   @override
   Future<void> onLoad() async {
     bestMovesNotifier.value = records.read(recordGameId, recordMetric);
-    shuffle();
+    if (!_resume()) shuffle();
     _measureBoard();
 
     for (var slot = 0; slot < board.length; slot++) {
@@ -131,6 +136,30 @@ class SlidingPuzzleGame extends FlameGame {
     return _origin + Vector2(column * _side, row * _side);
   }
 
+  /// Puts back a half solved board, if one was left behind.
+  bool _resume() {
+    final snapshot = progress?.read(recordGameId);
+    final saved = (snapshot?['board'] as List?)?.cast<int>();
+    if (saved == null || saved.length != board.length) return false;
+
+    board.setAll(0, saved);
+    movesNotifier.value = (snapshot!['moves'] as int?) ?? 0;
+    secondsNotifier.value = (snapshot['seconds'] as int?) ?? 0;
+    _elapsed = secondsNotifier.value.toDouble();
+    return true;
+  }
+
+  /// Keeps the board on the device, so leaving the page does not lose it.
+  void _save() {
+    unawaited(
+      progress?.save(recordGameId, {
+        'board': board,
+        'moves': moves,
+        'seconds': secondsNotifier.value,
+      }),
+    );
+  }
+
   /// Index of the empty slot.
   int get emptySlot => board.indexOf(0);
 
@@ -166,6 +195,7 @@ class SlidingPuzzleGame extends FlameGame {
       _onSolved();
     } else {
       sounds.tap();
+      _save();
     }
     return true;
   }
@@ -199,6 +229,8 @@ class SlidingPuzzleGame extends FlameGame {
     unawaited(
       records.submit(recordGameId, recordMetric, moves, goal: RecordGoal.lower),
     );
+    // Solved, so there is no half finished board left to come back to.
+    unawaited(progress?.clear(recordGameId));
     overlays.add(solvedOverlayId);
   }
 
@@ -228,6 +260,7 @@ class SlidingPuzzleGame extends FlameGame {
     _isRunning = false;
     isSolved = false;
     isNewRecord = false;
+    unawaited(progress?.clear(recordGameId));
     overlays.remove(solvedOverlayId);
   }
 

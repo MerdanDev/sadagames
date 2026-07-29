@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/games/block_fit/block_shape.dart';
 import 'package:sadagames/games/block_fit/components/components.dart';
+import 'package:sadagames/progress/progress.dart';
 import 'package:sadagames/records/records.dart';
 
 /// Drop pieces onto the grid and clear full rows and columns.
@@ -15,8 +16,12 @@ import 'package:sadagames/records/records.dart';
 /// the pieces getting more awkward the better the player does. The run ends
 /// when none of the three pieces in the tray fit anywhere.
 class BlockFitGame extends FlameGame with DragCallbacks {
-  BlockFitGame({required this.sounds, required this.records, Random? random})
-    : _random = random ?? Random();
+  BlockFitGame({
+    required this.sounds,
+    required this.records,
+    this.progress,
+    Random? random,
+  }) : _random = random ?? Random();
 
   /// Identifier of the game over overlay rendered by the Flutter layer.
   static const gameOverOverlayId = 'blockFitGameOver';
@@ -45,6 +50,10 @@ class BlockFitGame extends FlameGame with DragCallbacks {
 
   /// Store holding the player's best score between launches.
   final GameRecords records;
+
+  /// Where an interrupted run is kept. Block Fit runs are long, so losing one
+  /// to a closed page is the worst of any game here.
+  final GameProgress? progress;
 
   final Random _random;
 
@@ -101,7 +110,52 @@ class BlockFitGame extends FlameGame with DragCallbacks {
       ..position = _boardOrigin
       ..size = Vector2.all(_cellSize * gridSize);
     await add(board);
-    await _refillTray();
+    if (!await _resume()) await _refillTray();
+  }
+
+  /// Puts back an interrupted run, if there is one worth resuming.
+  Future<bool> _resume() async {
+    final snapshot = progress?.read(recordGameId);
+    final savedCells = (snapshot?['cells'] as List?)?.cast<int>();
+    final savedTray = (snapshot?['tray'] as List?)?.cast<int>();
+    if (savedCells == null || savedCells.length != cells.length) return false;
+    if (savedTray == null || savedTray.length != trySize) return false;
+
+    for (var i = 0; i < cells.length; i++) {
+      cells[i] = savedCells[i] == 0 ? null : Color(savedCells[i]);
+    }
+    for (var slot = 0; slot < trySize; slot++) {
+      final index = savedTray[slot];
+      tray[slot] = index >= 0 && index < allShapes.length
+          ? allShapes[index]
+          : null;
+    }
+    // A saved tray with nothing in it is not a run, it is a dead board.
+    if (tray.every((shape) => shape == null)) return false;
+
+    scoreNotifier.value = (snapshot!['score'] as int?) ?? 0;
+    swapsNotifier.value = (snapshot['swaps'] as int?) ?? 0;
+    _linesCleared = (snapshot['linesCleared'] as int?) ?? 0;
+
+    await _buildTrayPieces();
+    _checkForGameOver();
+    return true;
+  }
+
+  /// Keeps the run on the device, so closing the page does not lose it.
+  void _save() {
+    unawaited(
+      progress?.save(recordGameId, {
+        'cells': [for (final colour in cells) colour?.toARGB32() ?? 0],
+        'tray': [
+          for (final shape in tray)
+            shape == null ? -1 : allShapes.indexOf(shape),
+        ],
+        'score': score,
+        'swaps': swaps,
+        'linesCleared': _linesCleared,
+      }),
+    );
   }
 
   @override
@@ -186,6 +240,7 @@ class BlockFitGame extends FlameGame with DragCallbacks {
       sounds.tap();
     }
 
+    _save();
     return true;
   }
 
@@ -292,6 +347,7 @@ class BlockFitGame extends FlameGame with DragCallbacks {
       tray[slot] = _rollShape();
     }
     await _buildTrayPieces();
+    _save();
     _checkForGameOver();
   }
 
@@ -437,6 +493,7 @@ class BlockFitGame extends FlameGame with DragCallbacks {
     isNewRecord = false;
     preview = null;
     overlays.remove(gameOverOverlayId);
+    unawaited(progress?.clear(recordGameId));
     unawaited(_refillTray(force: true));
   }
 

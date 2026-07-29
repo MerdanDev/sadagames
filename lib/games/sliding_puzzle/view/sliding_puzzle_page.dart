@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
+import 'package:sadagames/progress/progress.dart';
 import 'package:sadagames/records/records.dart';
 import 'package:sadagames/settings/settings.dart';
 
@@ -53,6 +54,7 @@ class _SlidingPuzzleViewState extends State<SlidingPuzzleView> {
         SlidingPuzzleGame(
           sounds: _sounds,
           records: context.read<GameRecords>(),
+          progress: context.read<GameProgress>(),
         );
     _sounds.startMusic();
   }

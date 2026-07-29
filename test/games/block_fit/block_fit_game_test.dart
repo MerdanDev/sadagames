@@ -2,14 +2,19 @@ import 'package:flame_test/flame_test.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sadagames/games/block_fit/block_fit.dart';
+import 'package:sadagames/progress/progress.dart';
 import 'package:sadagames/records/records.dart';
 
 import '../../helpers/helpers.dart';
 
 /// Builds the game with a stub overlay, which the `GameWidget` would otherwise
 /// register through its `overlayBuilderMap`.
-BlockFitGame _buildGameWith(GameRecords records) {
-  return BlockFitGame(sounds: createTestSounds(), records: records)
+BlockFitGame _buildGameWith(GameRecords records, {GameProgress? progress}) {
+  return BlockFitGame(
+      sounds: createTestSounds(),
+      records: records,
+      progress: progress,
+    )
     ..overlays.addEntry(
       BlockFitGame.gameOverOverlayId,
       (_, _) => const SizedBox.shrink(),
@@ -391,5 +396,87 @@ void main() {
         hasLength(BlockFitGame.trySize),
       );
     });
+  });
+
+  group('saved runs', () {
+    late GameProgress progress;
+
+    setUp(() async {
+      progress = await createTestProgress();
+    });
+
+    testWithGame<BlockFitGame>(
+      'keep the board and score after a placement',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        game.tray[0] = _dot;
+        game.placeFromTray(0, 3, 4);
+        await game.ready();
+
+        final saved = progress.read(BlockFitGame.recordGameId);
+        expect(saved, isNotNull);
+        expect(saved!['score'], equals(1));
+        expect(
+          (saved['cells'] as List)[4 * BlockFitGame.gridSize + 3],
+          isNot(0),
+        );
+      },
+    );
+
+    testWithGame<BlockFitGame>(
+      'name the tray pieces by a stable id',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        game.tray[0] = _dot;
+        game.placeFromTray(0, 0, 0);
+        await game.ready();
+
+        final saved = progress.read(BlockFitGame.recordGameId)!;
+        for (final id in (saved['tray'] as List).cast<int>()) {
+          expect(id, inInclusiveRange(-1, allShapes.length - 1));
+        }
+      },
+    );
+  });
+
+  group('resuming a saved run', () {
+    late GameProgress progress;
+
+    setUp(() async {
+      progress = await createTestProgress();
+      final cells = List<int>.filled(
+        BlockFitGame.gridSize * BlockFitGame.gridSize,
+        0,
+      );
+      cells[0] = const Color(0xFF123456).toARGB32();
+      await progress.save(BlockFitGame.recordGameId, {
+        'cells': cells,
+        'tray': [0, 1, -1],
+        'score': 250,
+        'swaps': 2,
+        'linesCleared': 3,
+      });
+    });
+
+    testWithGame<BlockFitGame>(
+      'puts the board, score and swaps back',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        expect(game.cellAt(0, 0), equals(const Color(0xFF123456)));
+        expect(game.score, equals(250));
+        expect(game.swaps, equals(2));
+      },
+    );
+
+    testWithGame<BlockFitGame>(
+      'puts the same tray pieces back',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        expect(game.tray[0], same(allShapes[0]));
+        expect(game.tray[1], same(allShapes[1]));
+        expect(game.tray[2], isNull);
+        expect(game.children.query<BlockPiece>(), hasLength(2));
+      },
+    );
   });
 }

@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/l10n/l10n.dart';
 import 'package:sadagames/loading/loading.dart';
+import 'package:sadagames/progress/progress.dart';
 import 'package:sadagames/records/records.dart';
 import 'package:sadagames/settings/settings.dart';
 
@@ -15,6 +16,7 @@ class App extends StatelessWidget {
     required this.records,
     required this.settings,
     required this.sounds,
+    required this.progress,
     super.key,
   });
 
@@ -27,6 +29,9 @@ class App extends StatelessWidget {
   /// The sound engine, shared by every game.
   final GameSounds sounds;
 
+  /// Interrupted runs, so a long game can be picked back up.
+  final GameProgress progress;
+
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
@@ -34,6 +39,7 @@ class App extends StatelessWidget {
         RepositoryProvider.value(value: records),
         RepositoryProvider.value(value: settings),
         RepositoryProvider.value(value: sounds),
+        RepositoryProvider.value(value: progress),
       ],
       child: MultiBlocProvider(
         providers: [

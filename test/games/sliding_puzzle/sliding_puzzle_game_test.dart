@@ -2,14 +2,22 @@ import 'package:flame_test/flame_test.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
+import 'package:sadagames/progress/progress.dart';
 import 'package:sadagames/records/records.dart';
 
 import '../../helpers/helpers.dart';
 
 /// Builds the game with a stub overlay, which the `GameWidget` would otherwise
 /// register through its `overlayBuilderMap`.
-SlidingPuzzleGame _buildGameWith(GameRecords records) {
-  return SlidingPuzzleGame(sounds: createTestSounds(), records: records)
+SlidingPuzzleGame _buildGameWith(
+  GameRecords records, {
+  GameProgress? progress,
+}) {
+  return SlidingPuzzleGame(
+      sounds: createTestSounds(),
+      records: records,
+      progress: progress,
+    )
     ..overlays.addEntry(
       SlidingPuzzleGame.solvedOverlayId,
       (_, _) => const SizedBox.shrink(),
@@ -224,6 +232,67 @@ void main() {
           ..update(3);
 
         expect(game.secondsNotifier.value, equals(3));
+      },
+    );
+  });
+
+  group('saved runs', () {
+    late GameProgress progress;
+
+    setUp(() async {
+      progress = await createTestProgress();
+    });
+
+    testWithGame<SlidingPuzzleGame>(
+      'keep the board after a move',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        final movable = List.generate(game.board.length, (slot) => slot)
+            .firstWhere(
+              (slot) => game.canMoveSlot(slot) && game.board[slot] != 0,
+            );
+        game.tryMoveValue(game.board[movable]);
+        await game.ready();
+
+        final saved = progress.read(SlidingPuzzleGame.recordGameId);
+        expect(saved, isNotNull);
+        expect(saved!['moves'], equals(1));
+      },
+    );
+
+    testWithGame<SlidingPuzzleGame>(
+      'are forgotten once the puzzle is solved',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        _setUpAlmostSolved(game);
+        game.tryMoveValue(SlidingPuzzleGame.tileCount);
+        await game.ready();
+        expect(game.isSolved, isTrue);
+
+        expect(progress.read(SlidingPuzzleGame.recordGameId), isNull);
+      },
+    );
+  });
+
+  group('resuming a saved board', () {
+    late GameProgress progress;
+
+    setUp(() async {
+      progress = await createTestProgress();
+      await progress.save(SlidingPuzzleGame.recordGameId, {
+        'board': [1, 2, 3, 4, 5, 6, 7, 0, 8],
+        'moves': 17,
+        'seconds': 42,
+      });
+    });
+
+    testWithGame<SlidingPuzzleGame>(
+      'puts the half solved board back instead of shuffling',
+      () => _buildGameWith(records, progress: progress),
+      (game) async {
+        expect(game.board, equals([1, 2, 3, 4, 5, 6, 7, 0, 8]));
+        expect(game.moves, equals(17));
+        expect(game.secondsNotifier.value, equals(42));
       },
     );
   });

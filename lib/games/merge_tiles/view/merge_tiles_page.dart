@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/games/merge_tiles/merge_tiles.dart';
+import 'package:sadagames/progress/progress.dart';
 import 'package:sadagames/records/records.dart';
 import 'package:sadagames/settings/settings.dart';
 
@@ -53,6 +54,7 @@ class _MergeTilesViewState extends State<MergeTilesView> {
         MergeTilesGame(
           sounds: _sounds,
           records: context.read<GameRecords>(),
+          progress: context.read<GameProgress>(),
         );
     _sounds.startMusic();
   }
