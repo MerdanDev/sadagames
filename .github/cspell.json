@@ -15,6 +15,7 @@
     }
   ],
   "useGitignore": true,
+  "language": "en,en-GB",
   "words": [
     "localizable",
     "Empieza",
@@ -24,6 +25,15 @@
     "inicio",
     "inicial",
     "aplicación",
-    "juego"
+    "juego",
+    "sadagames",
+    "fvmrc",
+    "soloud",
+    "pentatonic",
+    "colour",
+    "colours",
+    "synthesised",
+    "synthesise",
+    "retuned"
   ]
 }

@@ -66,6 +66,12 @@ the end-of-run panel on I/O.
   keeps any order the player produces consonant. SoLoud holds frequency on the *source*, so
   each note owns an oscillator; sharing one would make overlapping notes steal each other's
   pitch. There is no background music, by choice.
+- **Cubits must not import `package:flutter/...`** — bloc lint fails CI on it. Reach for
+  `package:meta/meta.dart` for `@immutable` / `@visibleForTesting` and write function types out
+  rather than borrowing Flutter's typedefs. `avoid_public_fields` is deliberately off in
+  `analysis_options.yaml`: cubits take collaborators as final fields, which is not state.
+- CI enforces a **coverage floor of 55%** (`min_coverage` in `.github/workflows/main.yaml`,
+  against a real figure of 57.2%). Ratchet it up as coverage improves; never down to pass a run.
 - Game pages deliberately have **no** `SafeArea` around `GameWidget` — the canvas is
   edge-to-edge and only the HUD row is inset. Don't "fix" this by wrapping the whole page.
   Content drawn *inside* Flame gets no such inset, so anything pinned to an edge has to be

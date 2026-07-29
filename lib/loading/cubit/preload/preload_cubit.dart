@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flame/cache.dart';
-import 'package:flutter/widgets.dart';
+import 'package:meta/meta.dart';
 import 'package:sadagames/gen/assets.gen.dart';
 
 part 'preload_state.dart';
@@ -44,5 +44,5 @@ class PreloadPhase {
   const PreloadPhase(this.label, this.start);
 
   final String label;
-  final ValueGetter<Future<void>> start;
+  final Future<void> Function() start;
 }

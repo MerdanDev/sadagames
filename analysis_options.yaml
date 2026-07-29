@@ -1,6 +1,19 @@
 include:
   - package:very_good_analysis/analysis_options.yaml
   - package:bloc_lint/recommended.yaml
+bloc:
+  rules:
+    avoid_flutter_imports: true
+    avoid_public_bloc_methods: true
+    # The cubits take their collaborators — a Flame `Images` cache, `GameSounds`,
+    # `GameSettings` — as final constructor fields, and callers read them back.
+    # The rule's remedy is to move public fields into `state`, but these are
+    # injected dependencies rather than state: they never change over the cubit's
+    # life, and putting a sound engine handle into an Equatable state would make
+    # equality meaningless.
+    avoid_public_fields: false
+    prefer_file_naming_conventions: true
+    prefer_void_public_cubit_methods: true
 analyzer:
   exclude:
     - lib/gen/*
