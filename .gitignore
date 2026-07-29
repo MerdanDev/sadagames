@@ -46,6 +46,9 @@ unlinked_spec.ds
 # Android related
 **/android/**/gradle-wrapper.jar
 **/android/.gradle
+# Written by Gradle's updateDaemonJvm task, not by a decision this project made:
+# it pins the daemon to JDK 21 while the machine and CI both build on 17.
+**/android/gradle/gradle-daemon-jvm.properties
 **/android/captures/
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
