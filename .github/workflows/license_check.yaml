@@ -22,4 +22,14 @@ jobs:
   license_check:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/license_check.yml@v1
     with:
-      allowed: "MIT,BSD-3-Clause,BSD-2-Clause,Apache-2.0"
+      # The reusable workflow sets is_flutter from whether this input is present.
+      # Without it the job installs plain Dart and `dart pub get` cannot resolve a
+      # package that depends on the Flutter SDK. Keep in step with main.yaml.
+      flutter_version: "3.44.x"
+      # Zlib is here for vector_math, which Flutter pulls in transitively and no
+      # app can drop; it is permissive and OSI approved.
+      allowed: "MIT,BSD-3-Clause,BSD-2-Clause,Apache-2.0,Zlib"
+      # pub.dev reports no licence for pubspec_lock_parse, but the LICENSE file it
+      # ships is Apache-2.0, which is allowed above. Skipping the package beats
+      # ignore_retrieval_failures, which would wave through every future unknown.
+      skip_packages: "pubspec_lock_parse"
