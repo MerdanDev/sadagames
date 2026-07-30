@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/games/stack_tower/stack_tower.dart';
+import 'package:sadagames/games/widgets/widgets.dart';
 import 'package:sadagames/records/records.dart';
 import 'package:sadagames/settings/settings.dart';
 
@@ -231,16 +232,9 @@ class _GameOverOverlay extends StatelessWidget {
                     )}',
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: game.restart,
-              child: const Text('Play again'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Back to games',
-                style: TextStyle(color: Colors.white),
-              ),
+            GameOverActions(
+              onPlayAgain: game.restart,
+              wasNewRecord: game.isNewRecord,
             ),
           ],
         ),

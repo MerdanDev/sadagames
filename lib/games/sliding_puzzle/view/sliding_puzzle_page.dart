@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
+import 'package:sadagames/games/widgets/widgets.dart';
 import 'package:sadagames/progress/progress.dart';
 import 'package:sadagames/records/records.dart';
 import 'package:sadagames/settings/settings.dart';
@@ -240,16 +241,10 @@ class _SolvedOverlay extends StatelessWidget {
                         '${formatRecord(game.bestMoves ?? game.moves, 'move')}',
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: game.restart,
-              child: const Text('Shuffle again'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Back to games',
-                style: TextStyle(color: Colors.white),
-              ),
+            GameOverActions(
+              onPlayAgain: game.restart,
+              wasNewRecord: game.isNewRecord,
+              playAgainLabel: 'Shuffle again',
             ),
           ],
         ),

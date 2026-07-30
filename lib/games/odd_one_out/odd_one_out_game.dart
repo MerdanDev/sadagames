@@ -28,6 +28,12 @@ class OddOneOutGame extends FlameGame {
   /// Wrong taps and time outs the player may spend before the run ends.
   static const maxLives = 3;
 
+  /// Rewarded continues a single run may buy.
+  ///
+  /// One. A run the player can keep buying back stops being a run, and the
+  /// record it sets stops meaning anything.
+  static const maxContinues = 1;
+
   /// A life comes back every time the player clears this many levels.
   static const levelsPerExtraLife = 5;
 
@@ -70,6 +76,12 @@ class OddOneOutGame extends FlameGame {
 
   /// Whether the run that just ended beat the previous best.
   bool isNewRecord = false;
+
+  /// Rewarded continues spent so far this run.
+  int continuesUsed = 0;
+
+  /// Whether the run can still be bought back.
+  bool get canContinue => continuesUsed < maxContinues;
 
   double _secondsLeft = _startSeconds;
 
@@ -204,12 +216,28 @@ class OddOneOutGame extends FlameGame {
     overlays.add(gameOverOverlayId);
   }
 
+  /// Picks the run back up on the level it ended, with a life restored.
+  ///
+  /// The clock goes back to full rather than to whatever was left, so the life
+  /// the player paid for is a real one and not a fraction of a second.
+  void continueRun() {
+    if (!isGameOver || !canContinue) return;
+    continuesUsed++;
+
+    livesNotifier.value = 1;
+    isGameOver = false;
+    isNewRecord = false;
+    _restartTimer();
+    overlays.remove(gameOverOverlayId);
+  }
+
   /// Starts a fresh run from level one.
   void restart() {
     levelNotifier.value = 1;
     livesNotifier.value = maxLives;
     isGameOver = false;
     isNewRecord = false;
+    continuesUsed = 0;
     _restartTimer();
     unawaited(_buildBoard());
     overlays.remove(gameOverOverlayId);

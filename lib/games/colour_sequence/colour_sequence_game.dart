@@ -40,6 +40,12 @@ class ColourSequenceGame extends FlameGame {
   /// One slip is forgiven; the second ends the run.
   static const maxLives = 2;
 
+  /// Rewarded continues a single run may buy.
+  ///
+  /// One. A run the player can keep buying back stops being a run, and the
+  /// record it sets stops meaning anything.
+  static const maxContinues = 1;
+
   /// Pads on the board.
   static const padCount = 4;
 
@@ -95,6 +101,12 @@ class ColourSequenceGame extends FlameGame {
 
   /// Whether the run that just ended beat the previous best.
   bool isNewRecord = false;
+
+  /// Rewarded continues spent so far this run.
+  int continuesUsed = 0;
+
+  /// Whether the run can still be bought back.
+  bool get canContinue => continuesUsed < maxContinues;
 
   int _playbackIndex = 0;
   int _inputIndex = 0;
@@ -235,12 +247,28 @@ class ColourSequenceGame extends FlameGame {
     overlays.add(gameOverOverlayId);
   }
 
+  /// Picks the run back up with a life restored, keeping the sequence.
+  ///
+  /// The sequence is replayed rather than handed straight back to the player.
+  /// They just proved they had lost track of it, so resuming at the prompt
+  /// would spend the life they paid for on the same mistake.
+  void continueRun() {
+    if (!isGameOver || !canContinue) return;
+    continuesUsed++;
+
+    livesNotifier.value = 1;
+    isNewRecord = false;
+    overlays.remove(gameOverOverlayId);
+    _beginPlayback();
+  }
+
   /// Starts a fresh run from a single pad.
   void restart() {
     sequence.clear();
     completedNotifier.value = 0;
     livesNotifier.value = maxLives;
     isNewRecord = false;
+    continuesUsed = 0;
     overlays.remove(gameOverOverlayId);
     _startRound();
   }

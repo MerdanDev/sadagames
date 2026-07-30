@@ -27,6 +27,7 @@ Every command must run through `fvm` — see Gotchas.
 - `lib/records/` — personal bests (shared_preferences) plus the shared record widget
 - `lib/progress/` — an interrupted run, saved so a game without a clock can be picked back up
 - `lib/settings/` — the mute switch, kept between launches
+- `lib/ads/` — AdMob: the banner, the between-runs interstitial and the rewarded continue
 - `lib/audio/` — the synthesised sound engine, shared app wide
 - `lib/game/` — the template's original unicorn demo, kept as a catalog entry
 - `lib/loading/` — the preload screen that runs before the menu
@@ -42,8 +43,8 @@ chrome). The game exposes `ValueNotifier`s for score-like values and the page re
 the HUD; the game never builds widgets. End-of-run panels are Flame overlays registered in the
 page's `overlayBuilderMap`. `AudioCubit` is created per page but owns only the mute switch.
 
-`GameRecords`, `GameSettings` and `GameSounds` are built once before `runApp` and shared through
-`RepositoryProvider`. Record reads are synchronous on purpose, so a game knows whether a run was
+`GameRecords`, `GameSettings`, `GameSounds`, `GameProgress` and `GameAds` are built once before
+`runApp` and shared through `RepositoryProvider`. Record reads are synchronous on purpose, so a game knows whether a run was
 a record *before* showing its overlay and lets the write settle in the background — never block
 the end-of-run panel on I/O.
 
@@ -81,7 +82,7 @@ the end-of-run panel on I/O.
   The override in `android/build.gradle.kts` covers *every* module, not just `:app` — plugins
   that build native code resolve their own AGP default, so an app-level pin never reaches them.
 - CI enforces a **coverage floor of 55%** (`min_coverage` in `.github/workflows/main.yaml`,
-  against a real figure of 57.2%). Ratchet it up as coverage improves; never down to pass a run.
+  against a real figure of 56.5%). Ratchet it up as coverage improves; never down to pass a run.
 - Game pages deliberately have **no** `SafeArea` around `GameWidget` — the canvas is
   edge-to-edge and only the HUD row is inset. Don't "fix" this by wrapping the whole page.
   Content drawn *inside* Flame gets no such inset, so anything pinned to an edge has to be
@@ -105,6 +106,9 @@ the end-of-run panel on I/O.
   Read it before writing any new game.
 - `.claude/docs/game-backlog.md` — planned games in build order, plus cross-cutting work. Read
   it when picking what to build next; tick entries off as they ship.
+- `.claude/docs/ads.md` — which AdMob format goes where, how rarely the interstitial fires, and
+  what each game's rewarded continue hands back. Read it before touching `lib/ads/` or a game
+  over panel.
 
 ---
 

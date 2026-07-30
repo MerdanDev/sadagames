@@ -29,6 +29,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- The AdMob app id, read by the native SDK before any Dart runs. It
+             is the live one on every flavor: Google's *test units* are what
+             keep development builds from serving real ads, and they need a
+             real app id to pair with. Getting this wrong crashes on launch.
+             The units themselves live in lib/ads/ad_units.dart. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3745366747328031~8813478913" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

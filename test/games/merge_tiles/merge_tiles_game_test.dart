@@ -511,4 +511,74 @@ void main() {
       },
     );
   });
+
+  group('rewarded rescue', () {
+    /// Fills the board to a position with no merge left in it.
+    Future<void> jam(MergeTilesGame game) async {
+      await game.setBoard([
+        2, 4, 2, 4, //
+        4, 2, 4, 2, //
+        2, 4, 2, 4, //
+        2, 2, 2, 4,
+      ]);
+      game.move(SwipeDirection.left);
+      await game.ready();
+    }
+
+    testWithGame<MergeTilesGame>(
+      'takes the lowest tile and hands the board back',
+      () => _buildGameWith(records, random: _FixedRandom()),
+      (game) async {
+        await jam(game);
+        expect(game.isGameOver, isTrue);
+
+        final before = game.values.where((value) => value != 0).toList();
+        final lowest = before.reduce(min);
+        final score = game.score;
+
+        expect(game.removeTileForContinue(), isTrue);
+
+        final after = game.values.where((value) => value != 0).toList();
+        expect(after, hasLength(before.length - 1));
+        expect(
+          after.where((value) => value == lowest),
+          hasLength(before.where((value) => value == lowest).length - 1),
+          reason: 'the small wedged tiles are what jammed the board',
+        );
+        expect(game.isGameOver, isFalse);
+        expect(game.hasAnyMove, isTrue);
+        expect(game.score, equals(score));
+        expect(
+          game.overlays.isActive(MergeTilesGame.gameOverOverlayId),
+          isFalse,
+        );
+      },
+    );
+
+    testWithGame<MergeTilesGame>(
+      'is sold only once a run',
+      () => _buildGameWith(records, random: _FixedRandom()),
+      (game) async {
+        await jam(game);
+        expect(game.removeTileForContinue(), isTrue);
+        expect(game.canContinue, isFalse);
+
+        await jam(game);
+        expect(game.removeTileForContinue(), isFalse);
+        expect(game.isGameOver, isTrue);
+      },
+    );
+
+    testWithGame<MergeTilesGame>(
+      'is on offer again next run',
+      () => _buildGameWith(records, random: _FixedRandom()),
+      (game) async {
+        await jam(game);
+        game.removeTileForContinue();
+        await game.restart();
+
+        expect(game.canContinue, isTrue);
+      },
+    );
+  });
 }

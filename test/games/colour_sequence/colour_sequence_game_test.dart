@@ -302,4 +302,55 @@ void main() {
       },
     );
   });
+
+  group('rewarded continue', () {
+    testWithGame<ColourSequenceGame>(
+      'gives a life back and replays the sequence it kept',
+      buildGame,
+      (game) async {
+        _watchPlayback(game);
+        _answerCorrectly(game);
+        _watchPlayback(game);
+        final rounds = game.completedRounds;
+        final sequence = [...game.sequence];
+
+        for (var i = 0; i < ColourSequenceGame.maxLives; i++) {
+          game.pressPad(_wrongPad(game));
+          _watchPlayback(game);
+        }
+        expect(game.isGameOver, isTrue);
+
+        game.continueRun();
+
+        expect(game.isGameOver, isFalse);
+        expect(game.lives, equals(1));
+        expect(game.completedRounds, equals(rounds));
+        expect(game.sequence, equals(sequence));
+        expect(
+          game.status,
+          equals(SequenceStatus.showing),
+          reason: 'the player just lost the thread, so show it again',
+        );
+      },
+    );
+
+    testWithGame<ColourSequenceGame>('is sold only once a run', buildGame, (
+      game,
+    ) async {
+      for (var i = 0; i < ColourSequenceGame.maxLives; i++) {
+        _watchPlayback(game);
+        game.pressPad(_wrongPad(game));
+      }
+      game.continueRun();
+      expect(game.canContinue, isFalse);
+
+      for (var i = 0; i < ColourSequenceGame.maxLives; i++) {
+        _watchPlayback(game);
+        game.pressPad(_wrongPad(game));
+      }
+      game.continueRun();
+
+      expect(game.isGameOver, isTrue);
+    });
+  });
 }

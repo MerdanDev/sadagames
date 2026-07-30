@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockingjay/mockingjay.dart';
+import 'package:sadagames/ads/ads.dart';
 import 'package:sadagames/audio/audio.dart';
 import 'package:sadagames/game/cubit/cubit.dart';
 import 'package:sadagames/l10n/l10n.dart';
@@ -48,6 +49,7 @@ extension PumpApp on WidgetTester {
     GameSettings? settings,
     GameSounds? sounds,
     GameProgress? progress,
+    GameAds? ads,
   }) async {
     final gameRecords = records ?? await createTestRecords();
     // Reuses whatever preferences the records store already set up.
@@ -66,6 +68,7 @@ extension PumpApp on WidgetTester {
             value:
                 progress ?? GameProgress(await SharedPreferences.getInstance()),
           ),
+          RepositoryProvider<GameAds>.value(value: ads ?? NoGameAds()),
         ],
         child: MultiBlocProvider(
           providers: [

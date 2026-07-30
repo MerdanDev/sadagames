@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sadagames/ads/ads.dart';
 import 'package:sadagames/games/games.dart';
 import 'package:sadagames/l10n/l10n.dart';
 import 'package:sadagames/records/records.dart';
@@ -17,7 +18,16 @@ class MenuPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.menuAppBarTitle)),
-      body: const SafeArea(child: MenuView()),
+      // The banner is anchored below the list rather than pinned into it, so
+      // it can never slide under the player's thumb mid-scroll.
+      body: const SafeArea(
+        child: Column(
+          children: [
+            Expanded(child: MenuView()),
+            MenuBanner(),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -42,6 +42,12 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
   /// Undos the player may hold at once.
   static const maxUndos = 3;
 
+  /// Rewarded rescues a single run may buy.
+  ///
+  /// One. A board the player can keep unjamming stops being a board, and the
+  /// score it reaches stops meaning anything.
+  static const maxContinues = 1;
+
   static const _slideDuration = 0.11;
   static const _swipeThreshold = 18.0;
 
@@ -86,6 +92,12 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
 
   /// Whether the run that just ended beat the previous best.
   bool isNewRecord = false;
+
+  /// Rewarded rescues spent so far this run.
+  int continuesUsed = 0;
+
+  /// Whether the board can still be bought back.
+  bool get canContinue => continuesUsed < maxContinues;
 
   /// Set once the game is torn down. A move finishes asynchronously, so a page
   /// closed mid-move would otherwise come back to disposed notifiers.
@@ -353,6 +365,42 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
     return true;
   }
 
+  /// Takes the lowest tile off the board and hands the run back.
+  ///
+  /// One tile is enough. This board only ever jams when it is completely
+  /// full, so the single gap opened here is already a legal move again.
+  ///
+  /// The lowest is the right one to take: the small odd values wedged between
+  /// big ones are exactly what caused the jam, and lifting a big tile would
+  /// throw away the work the run is built on.
+  ///
+  /// It scores nothing and hands back no undo. What the player bought is the
+  /// position they were in, not a fresh set of tools.
+  bool removeTileForContinue() {
+    if (!isGameOver || !canContinue) return false;
+
+    MergeTile? lowest;
+    for (final tile in board) {
+      if (tile == null) continue;
+      if (lowest == null || tile.value < lowest.value) lowest = tile;
+    }
+    if (lowest == null) return false;
+
+    continuesUsed++;
+    board[lowest.slot] = null;
+    lowest.removeFromParent();
+
+    // The snapshot describes the full board that just jammed. Undoing into it
+    // would hand the jam straight back, having charged for the way out.
+    _snapshotValues = null;
+    isGameOver = false;
+    isNewRecord = false;
+    sounds.win();
+    _save();
+    overlays.remove(gameOverOverlayId);
+    return true;
+  }
+
   Future<void> _rebuild(List<int> snapshot) async {
     for (final tile in board) {
       tile?.removeFromParent();
@@ -445,6 +493,7 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
     _snapshotScore = 0;
     isGameOver = false;
     isNewRecord = false;
+    continuesUsed = 0;
     overlays.remove(gameOverOverlayId);
     unawaited(progress?.clear(recordGameId));
     await _spawnTile();
