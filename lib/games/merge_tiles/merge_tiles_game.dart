@@ -215,6 +215,11 @@ class MergeTilesGame extends FlameGame with DragCallbacks {
     );
     board[slot] = tile;
     await add(tile);
+    // Checked again on the far side of the await, not just on the way in: a
+    // page closed mid-move tears the game down during it, and the notifier
+    // below is disposed by then. `_finishMove` guards its own await the same
+    // way — this is the one that was missed.
+    if (_isTornDown) return;
     tile.appear();
     if (value > highestTile) highestNotifier.value = value;
   }
