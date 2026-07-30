@@ -30,6 +30,12 @@ jobs:
   spell-check:
     uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/spell_check.yml@v1
     with:
+      # `.claude/**` is listed on its own even though `**/*.md` looks like it
+      # covers it. The action runs cspell with check_dot_files: explicit, so a
+      # dot directory is skipped unless a glob names it — and the agent guide's
+      # notes are exactly the docs worth keeping honest. Don't "simplify" the
+      # second line away.
       includes: |
         **/*.md
+        .claude/**/*.md
       modified_files_only: false
