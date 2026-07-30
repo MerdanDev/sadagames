@@ -20,6 +20,9 @@ design pass first.
 - **Merge Tiles** — `lib/games/merge_tiles/`. The 2048 shape. The record is the score rather
   than the biggest tile, because the menu reads `Best: 3540 points` far better than
   `Best: 512 tiles`; the biggest tile is shown in the HUD during a run instead.
+- **Snake** — `lib/games/snake/`. Arcade; record is apples eaten. Length is not the record for
+  the same reason: the comeback hands segments back, so length is the price of the rescue and
+  cannot also be the score.
 
 ## What actually sells on the Play Store
 
@@ -43,17 +46,15 @@ That is the same bar as `game-engagement.md`, so the list below is ordered to ma
 
 | # | Game | Genre | Core loop | Record | Effort |
 |---|---|---|---|---|---|
-| 1 | Tile Tap | Rhythm/reflex | Tap the dark tiles as the column scrolls, faster each row | Tiles tapped | S |
+| 5 | Memory Pairs | Thinking | Flip cards two at a time to find matching pairs | Fewest flips | M |
 
-**Why this next.** It is one mechanic, needs no assets, and gets its whole feel from pitching
-`effect.mp3` per column, which costs nothing.
+**Why this next.** The collection has gone reflex-heavy — Snake, Tile Tap and Stack Tower all
+punish hesitation. Memory Pairs is the thinking shape, and it needs no assets and no clock.
 
 ## After that
 
 | # | Game | Genre | Core loop | Record | Effort |
 |---|---|---|---|---|---|
-| 4 | Snake | Arcade | Swipe to steer, eat, grow, avoid yourself | Longest snake | M |
-| 5 | Memory Pairs | Thinking | Flip cards two at a time to find matching pairs | Fewest flips | M |
 | 6 | One Tap Flyer | Reflex | Tap to flap through gaps that keep narrowing | Gaps passed | M |
 | 7 | 2048 | Puzzle | Swipe to merge equal tiles | Highest tile | M |
 | 8 | Road Hop | Arcade | Tap to hop forward, dodge the traffic, never stop | Squares crossed | M |
@@ -68,7 +69,6 @@ which is a genuine design pass rather than a single mechanic.
 
 Requirement 4 says a run must not be pure attrition. Per game:
 
-- Snake — a rare bonus that shrinks the tail
 - One Tap Flyer, Road Hop, Sky Hopper, Endless Runner — a shield that eats one collision
 - Memory Pairs — a single undo, since it is a thinking game rather than a reflex one
   (Merge Tiles ships an undo, with another earned per new biggest tile)

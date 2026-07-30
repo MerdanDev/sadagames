@@ -19,9 +19,9 @@ understood, redesign it instead of writing instructions.
 Each tap, drag or move produces an immediate change the player can see *and* hear — motion,
 scale, colour, sound. Never let an input land silently; silence reads as a bug.
 
-Use `setPlaybackRate` to pitch `effect.mp3` per event so different actions sound different:
-rising pitch for a growing streak, a low note for a loss. Animate state changes with Flame
-effects (`MoveToEffect`, `ScaleEffect`) rather than snapping positions.
+Ask `GameSounds` for what happened — `note`, `tap`, `fail`, `win` — never for a particular
+sound. Walk `note` up the scale as a streak grows, so a good run turns into a tune. Animate
+state changes with Flame effects (`MoveToEffect`, `ScaleEffect`) rather than snapping positions.
 
 ### 3. Difficulty climbs with the player
 

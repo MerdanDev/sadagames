@@ -4,6 +4,7 @@ export 'game_catalog.dart';
 export 'merge_tiles/merge_tiles.dart';
 export 'odd_one_out/odd_one_out.dart';
 export 'sliding_puzzle/sliding_puzzle.dart';
+export 'snake/snake.dart';
 export 'stack_tower/stack_tower.dart';
 export 'star_catcher/star_catcher.dart';
 export 'tile_tap/tile_tap.dart';

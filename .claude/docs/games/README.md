@@ -7,6 +7,7 @@ back, and which constants to reach for when it feels wrong.
 
 | Game | Genre | Record | Comeback |
 |---|---|---|---|
+| [Snake](snake.md) | Arcade | Apples eaten | Gold trim fruit |
 | [Block Fit](block-fit.md) | Block puzzle | High score | Earned tray swap |
 | [Merge Tiles](merge-tiles.md) | Sliding merge | High score | Undo, one earned per new biggest tile |
 | [Stack Tower](stack-tower.md) | Timing | Tallest tower | Width won back by a perfect drop |

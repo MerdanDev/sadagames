@@ -5,6 +5,7 @@ import 'package:sadagames/games/colour_sequence/colour_sequence.dart';
 import 'package:sadagames/games/merge_tiles/merge_tiles.dart';
 import 'package:sadagames/games/odd_one_out/odd_one_out.dart';
 import 'package:sadagames/games/sliding_puzzle/sliding_puzzle.dart';
+import 'package:sadagames/games/snake/snake.dart';
 import 'package:sadagames/games/stack_tower/stack_tower.dart';
 import 'package:sadagames/games/star_catcher/star_catcher.dart';
 import 'package:sadagames/games/tile_tap/tile_tap.dart';
@@ -60,6 +61,16 @@ class GameCatalogEntry {
 /// renders whatever this list contains.
 abstract final class GameCatalog {
   static const entries = <GameCatalogEntry>[
+    GameCatalogEntry(
+      id: 'snake',
+      name: 'Snake',
+      description: 'Swipe to steer, eat, grow, and stay off yourself.',
+      icon: Icons.gesture_rounded,
+      color: Color(0xFF43AA8B),
+      routeBuilder: SnakePage.route,
+      recordMetric: SnakeGame.recordMetric,
+      recordUnit: 'apple',
+    ),
     GameCatalogEntry(
       id: 'block_fit',
       name: 'Block Fit',

@@ -7,6 +7,17 @@ import 'package:sadagames/records/records.dart';
 
 import '../../helpers/helpers.dart';
 
+/// Gives the menu a surface tall enough to hold every entry at once.
+///
+/// The list builds lazily, so a game far enough down the catalog is not built
+/// at all on a phone sized surface and cannot be found.
+void _showWholeList(WidgetTester tester) {
+  tester.view
+    ..physicalSize = const Size(1200, 4000)
+    ..devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
+
 void main() {
   group('MenuPage', () {
     testWidgets('renders MenuView', (tester) async {
@@ -17,12 +28,7 @@ void main() {
 
   group('MenuView', () {
     testWidgets('renders a tile for every catalog entry', (tester) async {
-      // The list builds lazily, so give it a surface tall enough to hold every
-      // entry at once rather than only the ones above the fold.
-      tester.view
-        ..physicalSize = const Size(1200, 4000)
-        ..devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
+      _showWholeList(tester);
 
       await tester.pumpApp(const MenuView());
 
@@ -58,6 +64,7 @@ void main() {
     });
 
     testWidgets('show the stored best for that game', (tester) async {
+      _showWholeList(tester);
       await tester.pumpApp(
         const MenuView(),
         records: await createTestRecords({'record.star_catcher.score': 12}),
@@ -67,6 +74,7 @@ void main() {
     });
 
     testWidgets('use the singular unit for a best of one', (tester) async {
+      _showWholeList(tester);
       await tester.pumpApp(
         const MenuView(),
         records: await createTestRecords({'record.star_catcher.score': 1}),
@@ -78,6 +86,7 @@ void main() {
     testWidgets('refresh when a record is set while the menu is alive', (
       tester,
     ) async {
+      _showWholeList(tester);
       final records = await createTestRecords();
       await tester.pumpApp(const MenuView(), records: records);
       expect(find.textContaining('Best:'), findsNothing);

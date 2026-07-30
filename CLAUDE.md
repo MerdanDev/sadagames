@@ -25,6 +25,8 @@ Every command must run through `fvm` — see Gotchas.
 - `lib/games/game_catalog.dart` — the list that drives the menu
 - `lib/menu/` — the game list screen
 - `lib/records/` — personal bests (shared_preferences) plus the shared record widget
+- `lib/progress/` — an interrupted run, saved so a game without a clock can be picked back up
+- `lib/settings/` — the mute switch, kept between launches
 - `lib/audio/` — the synthesised sound engine, shared app wide
 - `lib/game/` — the template's original unicorn demo, kept as a catalog entry
 - `lib/loading/` — the preload screen that runs before the menu
@@ -66,7 +68,8 @@ the end-of-run panel on I/O.
   collection can be retuned in one place. Notes come from a pentatonic scale, which is what
   keeps any order the player produces consonant. SoLoud holds frequency on the *source*, so
   each note owns an oscillator; sharing one would make overlapping notes steal each other's
-  pitch. There is no background music, by choice.
+  pitch. The background music is synthesised the same way — a slow bass and pad loop mixed well
+  under the cues — and every game page starts it in `initState` and stops it in `dispose`.
 - **Cubits must not import `package:flutter/...`** — bloc lint fails CI on it. Reach for
   `package:meta/meta.dart` for `@immutable` / `@visibleForTesting` and write function types out
   rather than borrowing Flutter's typedefs. `avoid_public_fields` is deliberately off in
