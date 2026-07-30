@@ -82,7 +82,7 @@ the end-of-run panel on I/O.
   The override in `android/build.gradle.kts` covers *every* module, not just `:app` — plugins
   that build native code resolve their own AGP default, so an app-level pin never reaches them.
 - CI enforces a **coverage floor of 55%** (`min_coverage` in `.github/workflows/main.yaml`,
-  against a real figure of 56.5%). Ratchet it up as coverage improves; never down to pass a run.
+  against a real figure of 57.3%). Ratchet it up as coverage improves; never down to pass a run.
 - Game pages deliberately have **no** `SafeArea` around `GameWidget` — the canvas is
   edge-to-edge and only the HUD row is inset. Don't "fix" this by wrapping the whole page.
   Content drawn *inside* Flame gets no such inset, so anything pinned to an edge has to be
