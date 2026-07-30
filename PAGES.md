@@ -1,41 +1,35 @@
-# Pages site
+# Developer site and app-ads.txt
 
-Three files at the repo root, served by GitHub Pages from `main` / `(root)`.
+Both live in a **separate repo**, not here: [MerdanDev/MerdanDev.github.io][site].
 
-- `index.html` — the developer website the Play Console store listing points at.
-- `app-ads.txt` — the AdMob authorization record. Nothing in it is secret: the
-  publisher id is already inside every ad unit id and every shipped APK, and
-  `f08c47fec0942fa0` is Google's TAG id, the same for every AdMob publisher.
-  The file is an allowlist saying who may sell this inventory, so it only works
-  by being public.
-- `.nojekyll` — skips Jekyll. With a root source Pages would otherwise try to
-  build the whole repo, and the `.txt` risks being processed rather than served
-  byte for byte.
+    https://merdandev.github.io/            the developer site
+    https://merdandev.github.io/app-ads.txt the AdMob authorization record
 
-Turn it on under Settings → Pages → source: branch `main`, folder `/`.
+## Why not in this repo
 
-## It has to sit at the *domain* root, which this is not
+AdMob strips the path off the developer website URL in the store listing and
+fetches `https://<host>/app-ads.txt`. It never looks in a subdirectory.
 
-Crawlers strip the path off the developer website URL and fetch
-`https://<host>/app-ads.txt`. They never look in a subdirectory.
+A GitHub **project** site always publishes under the repo name, so anything here
+serves from `https://merdandev.github.io/sadagames/…` — one level too deep to
+ever be found, wherever the file sits in the tree. A **user** site publishes at
+the host root, which is the whole reason the other repo exists.
 
-A **project** Pages site always publishes under the repo name, so these files
-land at `https://merdandev.github.io/sadagames/app-ads.txt` — one level too
-deep. Moving them out of `docs/` to the repo root did not change that: both
-produce the same URL, because the `/sadagames/` segment comes from the repo
-name, not from where the files sit in the tree.
+This repo did carry a copy at its root for one commit. It was removed because two
+copies of an authorization record is one too many: the crawler reads exactly one,
+and the other only rots.
 
-One of these has to be true before AdMob will verify the record:
+## Keeping it working
 
-1. **A custom domain on this repo** — add a `CNAME` file next to these, point
-   the DNS at GitHub Pages, and set that domain as the developer website in
-   Play Console. The file then serves from the root.
-2. **A user site** — the same `app-ads.txt` in a repo named exactly
-   `MerdanDev.github.io`, which publishes at the root already. That repo can be
-   a two-file stub; it does not need the games.
+- The Play Console **developer website** must be `https://merdandev.github.io`.
+  That URL is the only thing connecting the store listing to the record.
+- Every mediation partner AdMob adds needs its own line in [the site repo][site].
+- Nothing in `app-ads.txt` is secret — see the gotchas in
+  [.claude/docs/ads.md](.claude/docs/ads.md).
 
-Until then the page is live and the file is correct — only the AdMob check is
-pending.
+The alternative, if this repo should ever serve the site itself, is a custom
+domain: add a `CNAME`, point the DNS at Pages, and set that domain as the
+developer website. Then the root is a real domain root and the record verifies
+from here.
 
-Expect lag once it is reachable: Google recrawls within about a day, but AdMob
-can take several more to move the app to Authorized.
+[site]: https://github.com/MerdanDev/MerdanDev.github.io

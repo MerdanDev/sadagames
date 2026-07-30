@@ -80,17 +80,17 @@ android {
         create("production") {
             dimension = "default"
             applicationIdSuffix = ""
-            manifestPlaceholders["appName"] = "Sadagames"
+            manifestPlaceholders["appName"] = "Sada Games"
         }
         create("staging") {
             dimension = "default"
             applicationIdSuffix = ".stg"
-            manifestPlaceholders["appName"] = "[STG] Sadagames"
+            manifestPlaceholders["appName"] = "[STG] Sada Games"
         }
         create("development") {
             dimension = "default"
             applicationIdSuffix = ".dev"
-            manifestPlaceholders["appName"] = "[DEV] Sadagames"
+            manifestPlaceholders["appName"] = "[DEV] Sada Games"
         }
     }
 

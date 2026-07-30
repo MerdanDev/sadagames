@@ -91,7 +91,11 @@ button that appears seconds late.
   own flags — outside the EEA it is true without a form ever appearing. iOS also needs the ATT
   prompt (`NSUserTrackingUsageDescription`); without it ads still serve, they just pay less.
 - **`app-ads.txt`** has to be published on the developer domain listed in the Play/App Store
-  entry, or a large share of demand refuses to bid.
+  entry, or a large share of demand refuses to bid. It lives in a separate repo,
+  `MerdanDev/MerdanDev.github.io`, because a crawler only reads the *host root* and a project
+  Pages site always publishes under the repo name — see [PAGES.md](../../PAGES.md). Nothing in
+  it is secret: the publisher id is in every unit id above and in every shipped APK, and
+  `f08c47fec0942fa0` is Google's TAG id, identical for every AdMob publisher.
 - Banners are on the menu and nowhere else. Game canvases run edge to edge, and a banner next
   to a tap target invites the mis-taps AdMob counts as invalid traffic.
 - **`google_mobile_ads` must be 9.x — never downgrade it.** Every version through 6.0.0
